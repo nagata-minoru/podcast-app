@@ -111,4 +111,9 @@ describe('plainText', () => {
   it('タグを除き、文字参照を戻す', () => {
     expect(plainText('a<br/>b &lt;c&gt; &#12354;&#x3044; &unknown;')).toBe('a\nb <c> あい &unknown;')
   })
+
+  it('入れ子になったタグでも、タグの始まりを残さない', () => {
+    expect(plainText('x<scr<b>ipt>y')).toBe('xipt>y')
+    expect(plainText('x<<b>script>alert(1)<</b>/script>y')).toBe('xscript>alert(1)/script>y')
+  })
 })

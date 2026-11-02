@@ -83,14 +83,28 @@ const attr = (node: Node, name: string) => text(element(node)?.[`@_${name}`])
 const ENTITIES: Record<string, string> = { amp: '&', lt: '<', gt: '>', quot: '"', apos: "'", nbsp: ' ' }
 
 /**
+ * タグを取り除く。`<scr<b>ipt>` のような入れ子でタグが残らないよう、変わらなくなるまで繰り返す。
+ * @param html HTML を含むかもしれない文字
+ * @returns タグを除いた文字
+ */
+const stripTags = (html: string) => {
+  let current = html
+  let previous: string
+  do {
+    previous = current
+    current = current.replace(/<[^>]*>/g, '')
+  } while (current !== previous)
+  return current
+}
+
+/**
  * HTML を含む紹介文を、表示用の文字だけにする。段落と改行は改行に直す。
+ * 結果は Text にだけ表示し、HTML としては扱わない（文字参照を戻した「<」などは文字のまま出す）。
  * @param html HTML を含むかもしれない文字
  * @returns 文字だけにした文
  */
 export const plainText = (html: string) =>
-  html
-    .replace(/<\s*(br|\/p|\/div|\/li)\s*\/?>/gi, '\n')
-    .replace(/<[^>]*>/g, '')
+  stripTags(html.replace(/<\s*(br|\/p|\/div|\/li)\s*\/?>/gi, '\n'))
     .replace(/&#x([0-9a-f]+);/gi, (_, h: string) => String.fromCodePoint(parseInt(h, 16)))
     .replace(/&#(\d+);/g, (_, d: string) => String.fromCodePoint(Number(d)))
     .replace(/&([a-z]+);/gi, (m, name: string) => ENTITIES[name.toLowerCase()] ?? m)
