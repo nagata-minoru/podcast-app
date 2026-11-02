@@ -22,9 +22,11 @@ jobs:
       - uses: actions/checkout@v5
 
       # Node 24 には Yarn 4 を使うための corepack が同梱されている
+      # setup-node の自動キャッシュは corepack を有効にする前に Yarn 1 を呼んで失敗するため切り、下で自前で復元する
       - uses: actions/setup-node@v5
         with:
           node-version: 24
+          package-manager-cache: false
 
       - name: Yarn 4 を有効にする
         run: corepack enable
