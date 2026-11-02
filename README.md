@@ -191,6 +191,18 @@ mobile/
 - 新しいパッケージを入れる前に、必要かどうかを確認します。
 - Expo の API は SDK ごとに変わるため、コードを書く前に SDK 58 のドキュメントを確認します（`AGENTS.md` を参照）。
 
+## 依存パッケージの版の固定
+
+脆弱性（GHSA-g3hv-75wg-m249、GHSA-3g3m-2fjr-6pw4）を避けるため、`package.json` の `resolutions` で
+間接的に使われる `minimatch` を 11.0.3、`glob` を 14.0.3 に固定しています。
+ESLint や Expo が求める版（`minimatch` 3／10、`glob` 13）より新しいメジャー版を、強制的に使わせています。
+
+- `minimatch` 11 は `require('minimatch')` を関数として呼べません。eslint-plugin-react と eslint-plugin-import の
+  一部のルール（`react/jsx-pascal-case`、`import/no-unassigned-import`、`import/extensions` など）はその呼び方をしているため、
+  有効にすると lint が `TypeError: ... is not a function` で止まります。いまの設定ではどれも使っていません。
+- ESLint のルールを足したら、`yarn lint` が落ちないか確かめてください。
+- ESLint・Expo・Jest が修正版に対応したら `resolutions` を外し、`yarn install` で元の版の決め方に戻します。
+
 ## 次の作業
 
 実装方針の手順2「再生まわり」として、次の3つをつなげます。
