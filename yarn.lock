@@ -5565,7 +5565,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"fast-xml-parser@npm:^5.11.2":
+"fast-xml-parser@npm:5.11.2":
   version: 5.11.2
   resolution: "fast-xml-parser@npm:5.11.2"
   dependencies:
@@ -8852,7 +8852,7 @@ __metadata:
     expo-linking: "npm:~58.0.15"
     expo-router: "npm:~58.0.29"
     expo-status-bar: "npm:~58.0.4"
-    fast-xml-parser: "npm:^5.11.2"
+    fast-xml-parser: "npm:5.11.2"
     jest: "npm:~30.5.2"
     jest-expo: "npm:~58.0.13"
     react: "npm:19.3.0"
