@@ -5,9 +5,12 @@ export type Show = {
   publisher: string
   description: string
   category: string
-  updateFrequency: string
-  /** 全体の人気順。小さいほど人気（新着・おすすめの「トップ番組」に使う） */
-  popularityRank: number
+  /** 更新の間隔（例: 毎週水曜）。フィードから取り込んだ番組にはない */
+  updateFrequency?: string
+  /** 全体の人気順。小さいほど人気（新着・おすすめの「トップ番組」に使う）。フィードから取り込んだ番組にはない */
+  popularityRank?: number
+  /** RSS フィードの URL。フィードから取り込んだ番組だけにある */
+  feedUrl?: string
 }
 
 /** エピソード */
@@ -18,8 +21,10 @@ export type Episode = {
   summary: string
   /** 公開日（ISO 8601 の日付） */
   publishedAt: string
-  /** 再生時間（秒） */
+  /** 再生時間（秒）。フィードに書かれていなければ 0 で、音声を読み込んだら実際の長さに直す */
   duration: number
+  /** 音声の URL。フィードから取り込んだエピソードだけにあり、フィードに音声がなければない */
+  audioUrl?: string
 }
 
 /** エピソードごとの再生位置 */

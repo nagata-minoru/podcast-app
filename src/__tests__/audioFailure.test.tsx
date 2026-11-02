@@ -2,7 +2,9 @@ import { fireEvent } from '@testing-library/react-native'
 import { renderRouter, screen } from 'expo-router/testing-library'
 
 // 音声が1つもない状態にして、読み込めないときの動きを確かめる
-jest.mock('@/data/audio', () => ({ episodeAudio: {} }))
+jest.mock('@/data/audio', () => ({
+  ...jest.requireActual('@/data/audio'), episodeAudio: {}, audioSourceOf: () => undefined,
+}))
 
 /** 実際の画面フォルダ。Jest はプロジェクトの直下で動くため、そこからの相対パスで渡す */
 const APP_DIR = './src/app'

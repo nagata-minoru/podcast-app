@@ -1,4 +1,5 @@
-import { episodes, episodesOfShow, findEpisode, findShow, library, progresses, shows } from '@/data/mock'
+import { episodesOfShow, findEpisode, findShow } from '@/data/catalog'
+import { episodes, library, progresses, shows } from '@/data/mock'
 
 describe('架空データの整合性', () => {
   const showIds = shows.map((s) => s.id)
@@ -29,7 +30,7 @@ describe('架空データの整合性', () => {
   })
 
   it('人気順位は 1 から始まる重複のない連番', () => {
-    const ranks = shows.map((s) => s.popularityRank).sort((a, b) => a - b)
+    const ranks = shows.map((s) => s.popularityRank ?? 0).sort((a, b) => a - b)
     expect(ranks).toEqual(shows.map((_, i) => i + 1))
   })
 })

@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 
 /** 位置を進めて状態を知らせる間隔（ミリ秒） */
 const STEP_MS = 500
-/** 代わりの音声の長さ（秒）。読み込んだ音声の長さは区別しない */
+/** 代わりの音声の長さ（秒）。読み込んだ音声の長さは区別しない。URL の音声だけ、読み込むとこの長さを知らせる */
 const FAKE_DURATION = 600
 
 type Listener = (status: Record<string, unknown>) => void
@@ -15,6 +15,8 @@ class FakeAudioPlayer {
   playing = false
   playbackRate = 1
   isLoaded = false
+  /** 知らせる長さ（秒）。同梱の音声は mock.ts の長さを使うため 0（不明）にする */
+  duration = 0
   private listeners = new Set<Listener>()
   private timer: ReturnType<typeof setInterval> | null = null
 
@@ -31,12 +33,13 @@ class FakeAudioPlayer {
 
   /**
    * 音声を差し替え、すぐに読み込み済みとして知らせる。
-   * @param _source 音声
+   * @param source 音声
    */
-  replace = (_source: unknown) => {
+  replace = (source: unknown) => {
     this.stop()
     this.currentTime = 0
     this.isLoaded = true
+    this.duration = source && typeof source === 'object' && 'uri' in source ? FAKE_DURATION : 0
     this.emit()
   }
 
@@ -91,7 +94,7 @@ class FakeAudioPlayer {
     if (didJustFinish) this.stop()
     const status = {
       currentTime: this.currentTime, playing: this.playing, playbackRate: this.playbackRate,
-      isLoaded: this.isLoaded, didJustFinish, error: null,
+      isLoaded: this.isLoaded, duration: this.duration, didJustFinish, error: null,
     }
     this.listeners.forEach((l) => l(status))
   }

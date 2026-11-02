@@ -2,7 +2,7 @@ import { router } from 'expo-router'
 import { Pressable, StyleSheet, Text, View } from 'react-native'
 
 import { Artwork } from '@/components/parts'
-import { findShow } from '@/data/mock'
+import { findShow } from '@/data/catalog'
 import { usePlayer } from '@/player/PlayerProvider'
 import { MIN_TAP, usePalette } from '@/theme'
 import type { TabName } from '@/types'

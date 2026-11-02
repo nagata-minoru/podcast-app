@@ -4,7 +4,7 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native'
 
 import { playPauseLabel } from '@/components/MiniPlayer'
 import { Artwork, ProgressBar } from '@/components/parts'
-import { findShow } from '@/data/mock'
+import { findShow } from '@/data/catalog'
 import { formatDuration } from '@/format'
 import { usePlayer } from '@/player/PlayerProvider'
 import { MIN_TAP, usePalette } from '@/theme'

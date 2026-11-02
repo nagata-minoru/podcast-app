@@ -1,7 +1,8 @@
 import { type AudioStatus, setAudioModeAsync, useAudioPlayer } from 'expo-audio'
 import { type Dispatch, useCallback, useEffect, useLayoutEffect, useRef } from 'react'
 
-import { episodeAudio } from '@/data/audio'
+import { audioSourceOf } from '@/data/audio'
+import { setEpisodeDuration } from '@/data/catalog'
 import type { PlayerAction, PlayerState } from '@/player/playerState'
 
 /** 音声の再生位置を知らせてもらう間隔（ミリ秒） */
@@ -29,6 +30,7 @@ export const useLatest = <T>(value: T) => {
 /**
  * 再生状態（reducer）に合わせて expo-audio の音声を鳴らし、実際の再生位置を reducer に返す。
  * - 回が変わったら音声を差し替え、読み込めたら記録の位置へ移ってから鳴らす
+ * - 読み込んだ音声の長さが記録と違えば（フィードに長さがない回など）、実際の長さに直す
  * - 再生・一時停止・速度は reducer の状態に合わせる
  * - 鳴っている間は再生位置を sync で、最後まで鳴ったら finish で、読み込めなければ fail で知らせる
  * @param state 再生状態
@@ -75,6 +77,11 @@ export const useAudioEngine = (state: PlayerState, dispatch: Dispatch<PlayerActi
     /** 音声の状態の知らせを、reducer への操作に直す */
     const onStatus = (s: AudioStatus) => {
       if (s.error) return dispatch({ type: 'fail' })
+      const { episode, duration } = stateRef.current
+      if (s.isLoaded && episode && Math.floor(s.duration) > 0 && Math.floor(s.duration) !== duration) {
+        dispatch({ type: 'loaded', duration: s.duration })
+        setEpisodeDuration(episode.id, Math.floor(s.duration))
+      }
       if (pendingSeek.current !== null) {
         if (!s.isLoaded) return
         const position = pendingSeek.current
@@ -97,7 +104,8 @@ export const useAudioEngine = (state: PlayerState, dispatch: Dispatch<PlayerActi
       player.pause()
       return
     }
-    const source = episodeAudio[episodeId]
+    const episode = stateRef.current.episode
+    const source = episode && audioSourceOf(episode)
     if (!source) return
     pendingSeek.current = stateRef.current.position
     player.replace(source)
@@ -106,10 +114,11 @@ export const useAudioEngine = (state: PlayerState, dispatch: Dispatch<PlayerActi
   useEffect(() => {
     if (!episodeId || pendingSeek.current !== null) return
     // 音声のない回は、鳴らさずに読み込めなかったことを知らせる（再生し直したときも同じ）
-    if (status === 'playing' && !episodeAudio[episodeId]) dispatch({ type: 'fail' })
+    const episode = stateRef.current.episode
+    if (status === 'playing' && !(episode && audioSourceOf(episode))) dispatch({ type: 'fail' })
     else if (status === 'playing' && !failed) start()
     else player.pause()
-  }, [episodeId, status, failed, rate, player, start, dispatch])
+  }, [episodeId, status, failed, rate, player, start, dispatch, stateRef])
 
   return moveAudio
 }

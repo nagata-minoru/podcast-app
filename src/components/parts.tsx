@@ -2,8 +2,9 @@ import { Link } from 'expo-router'
 import type { ReactNode } from 'react'
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native'
 
-import { findShow } from '@/data/mock'
-import { formatDate, formatDuration } from '@/format'
+import { lacksAudio } from '@/data/audio'
+import { findShow } from '@/data/catalog'
+import { formatDate, formatLength } from '@/format'
 import { useIsHidden } from '@/library/LibraryProvider'
 import { usePlayer } from '@/player/PlayerProvider'
 import { MIN_TAP, usePalette } from '@/theme'
@@ -103,9 +104,22 @@ export const ProgressBar = ({ ratio, height = 4 }: { ratio: number, height?: num
   )
 }
 
+/** フィードに音声が載っていない回に添える文 */
+export const NO_AUDIO = '⊘ 音声なし'
+
+/**
+ * エピソードの公開日と長さを「10月29日・36分」の形にする。公開日がわからなければ長さだけにする。
+ * @param episode エピソード
+ * @returns 公開日と長さの文字列
+ */
+export const episodeMeta = (episode: Episode) =>
+  [episode.publishedAt ? formatDate(episode.publishedAt) : undefined, formatLength(episode.duration)]
+    .filter(Boolean).join('・')
+
 /**
  * エピソードの行。タップすると再生を始め、ミニプレイヤーを出す（再生画面は開かない）。
  * 再生中・一時停止中の回は、色だけでなく記号と文字でも示す。非表示にした番組の回（保存済み・履歴）には、その旨を添える。
+ * フィードに音声が載っていない回は「音声なし」と示し、押せないようにする。
  * @param props.episode エピソード
  * @param props.status 再生状況の文字列（例: 「未再生」「残り12分」）
  * @param props.withShow 番組名も出すか。いろいろな番組の回が混ざる一覧で使う
@@ -117,18 +131,21 @@ export const EpisodeRow = ({ episode, status, withShow = false }: {
   const c = usePalette()
   const player = usePlayer()
   const current = player.episode?.id === episode.id && player.status !== 'idle'
-  const meta = `${formatDate(episode.publishedAt)}・${formatDuration(episode.duration)}`
+  const noAudio = lacksAudio(episode)
+  const meta = episodeMeta(episode)
   const nowPlaying = player.status === 'playing' ? '▶ 再生中' : '❚❚ 一時停止中'
   const showTitle = withShow ? findShow(episode.showId)?.title : undefined
   const hiddenNote = useIsHidden()(episode.showId) ? '⊘ 非表示の番組' : undefined
-  const sub = [meta, status, hiddenNote].filter(Boolean).join('・')
+  const sub = [meta, status, hiddenNote, noAudio ? NO_AUDIO : undefined].filter(Boolean).join('・')
   // 右端の ▶ は飾りなので、読み上げる文は自分で組み立てる
   const label = [showTitle, episode.title, sub, current ? nowPlaying : undefined].filter(Boolean).join('、')
   return (
     <Pressable
       accessibilityRole="button"
       accessibilityLabel={label}
-      accessibilityHint={current ? undefined : '再生を始めます'}
+      accessibilityHint={current || noAudio ? undefined : '再生を始めます'}
+      accessibilityState={{ disabled: noAudio }}
+      disabled={noAudio}
       onPress={() => player.play(episode)}
       style={styles.row}>
       <View style={styles.rowBody}>
@@ -137,7 +154,7 @@ export const EpisodeRow = ({ episode, status, withShow = false }: {
         <Text style={[styles.rowSub, { color: c.subText }]}>{sub}</Text>
         {current && <Text style={[styles.rowSub, { color: c.text, fontWeight: '700' }]}>{nowPlaying}</Text>}
       </View>
-      {!current && <Text style={{ color: c.subText, fontSize: 16 }}>▶</Text>}
+      {!current && !noAudio && <Text style={{ color: c.subText, fontSize: 16 }}>▶</Text>}
     </Pressable>
   )
 }

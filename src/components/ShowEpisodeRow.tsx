@@ -1,16 +1,16 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native'
 
 import { playPauseLabel } from '@/components/MiniPlayer'
-import { ProgressBar } from '@/components/parts'
+import { episodeMeta, NO_AUDIO, ProgressBar } from '@/components/parts'
+import { lacksAudio } from '@/data/audio'
 import { playStateOf, playStatusText } from '@/data/derive'
-import { formatDate, formatDuration } from '@/format'
 import { usePlayer } from '@/player/PlayerProvider'
 import { MIN_TAP, usePalette } from '@/theme'
 import type { Episode } from '@/types'
 
 /**
  * 番組詳細のエピソード行。行を押すと再生を始め（再生画面は開かない）、右の再生ボタンはその場で再生／一時停止を切り替える。
- * 再生状況は文字と記号で示し、途中の回は進み具合の棒も出す。
+ * 再生状況は文字と記号で示し、途中の回は進み具合の棒も出す。フィードに音声が載っていない回は「音声なし」と示し、再生できない。
  * @param props.episode エピソード
  * @param props.saved 保存済みか
  * @param props.onMenu エピソードのメニューを開く処理
@@ -25,16 +25,19 @@ export const ShowEpisodeRow = ({ episode, saved, onMenu }: {
   const current = player.episode?.id === episode.id && player.status !== 'idle'
   const playing = current && player.status === 'playing'
   const { icon, label } = playPauseLabel(playing)
-  const meta = `${formatDate(episode.publishedAt)}・${formatDuration(episode.duration)}`
+  const noAudio = lacksAudio(episode)
+  const meta = episodeMeta(episode)
   const nowPlaying = playing ? '▶ 再生中' : '❚❚ 一時停止中'
-  const status = [current ? nowPlaying : playStatusText(episode, progress), saved ? '保存済み' : undefined]
-    .filter(Boolean).join('・')
-  const ratio = playStateOf(progress) === 'inProgress' && progress ? progress.position / episode.duration : undefined
+  const playText = noAudio ? NO_AUDIO : playStatusText(episode, progress)
+  const status = [current ? nowPlaying : playText, saved ? '保存済み' : undefined].filter(Boolean).join('・')
+  const inProgress = playStateOf(progress) === 'inProgress' && progress && episode.duration > 0
+  const ratio = inProgress ? progress.position / episode.duration : undefined
   return (
     <View style={styles.row}>
       <Pressable
         accessibilityRole="button" accessibilityLabel={[episode.title, meta, episode.summary, status].join('、')}
-        accessibilityHint={current ? undefined : '再生を始めます'}
+        accessibilityHint={current || noAudio ? undefined : '再生を始めます'}
+        accessibilityState={{ disabled: noAudio }} disabled={noAudio}
         onPress={() => player.play(episode)} style={styles.body}>
         <Text style={[styles.title, { color: c.text }]}>{episode.title}</Text>
         <Text style={[styles.sub, { color: c.subText }]}>{meta}</Text>
@@ -44,8 +47,9 @@ export const ShowEpisodeRow = ({ episode, saved, onMenu }: {
       </Pressable>
       <Pressable
         accessibilityRole="button" accessibilityLabel={`${episode.title}を${label}`}
+        accessibilityState={{ disabled: noAudio }} disabled={noAudio}
         onPress={() => (current ? player.toggle() : player.play(episode))}
-        style={[styles.icon, { borderColor: c.border }]}>
+        style={[styles.icon, { borderColor: c.border, opacity: noAudio ? 0.4 : 1 }]}>
         <Text style={{ color: c.text, fontSize: 16 }}>{icon}</Text>
       </Pressable>
       <Pressable

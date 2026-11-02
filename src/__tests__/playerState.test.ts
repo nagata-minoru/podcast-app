@@ -102,6 +102,22 @@ describe('playerReducer', () => {
     expect(Object.keys(s.progress)).toEqual(['b'])
   })
 
+  it('長さがわからない回は、長さを受け取るまで位置を動かさず、再生済みにもしない', () => {
+    const unknown = { ...episode, duration: 0 }
+    const s = playerReducer(idleState(), { type: 'play', episode: unknown, rate: 1, at: AT })
+    expect(playerReducer(s, { type: 'seek', delta: 30, at: AT })).toBe(s)
+    expect(playerReducer(s, { type: 'sync', position: 5, at: AT })).toBe(s)
+    const loaded = playerReducer(s, { type: 'loaded', duration: 120.7 })
+    expect(loaded).toMatchObject({ status: 'playing', duration: 120, episode: { duration: 120 } })
+    expect(playerReducer(loaded, { type: 'seek', delta: 30, at: AT }).position).toBe(30)
+  })
+
+  it('loaded は長さが同じか、idle なら何もしない', () => {
+    const s = playing()
+    expect(playerReducer(s, { type: 'loaded', duration: episode.duration })).toBe(s)
+    expect(playerReducer(idleState(), { type: 'loaded', duration: 100 })).toEqual(idleState())
+  })
+
   it('close で idle に戻り、閉じた位置を記録に残す', () => {
     const s = playerReducer(playing(60), { type: 'close', at: LATER })
     expect(s).toMatchObject({ status: 'idle', episode: null })

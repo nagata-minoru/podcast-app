@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { Empty, EpisodeRow, Screen, ShowRow } from '@/components/parts'
 import { Segmented } from '@/components/Segmented'
 import { unplayedCount, withEpisodes } from '@/data/derive'
-import { episodes, episodesOfShow, findShow } from '@/data/mock'
+import { episodesOfShow, findShow, useCatalog } from '@/data/catalog'
 import { formatClock, formatDuration } from '@/format'
 import { useLibrary } from '@/library/LibraryProvider'
 import { usePlayer } from '@/player/PlayerProvider'
@@ -19,6 +19,7 @@ const VIEWS = ['登録済み', '保存済み', '履歴'] as const
 const Followed = () => {
   const { followedShowIds } = useLibrary()
   const { progress } = usePlayer()
+  useCatalog()
   const list = followedShowIds.map(findShow).filter((s): s is Show => !!s)
   if (list.length === 0) return <Empty text="フォローしている番組はありません。" />
   return (
@@ -38,6 +39,7 @@ const Followed = () => {
  */
 const Saved = () => {
   const { savedEpisodeIds } = useLibrary()
+  const { episodes } = useCatalog()
   const list = episodes.filter((e) => savedEpisodeIds.includes(e.id))
   if (list.length === 0) return <Empty text="保存したエピソードはありません。" />
   return <>{list.map((e) => <EpisodeRow key={e.id} episode={e} withShow />)}</>

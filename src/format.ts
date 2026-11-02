@@ -45,3 +45,10 @@ export const formatSpokenClock = (seconds: number) => {
   const text = `${Math.floor((total % 3600) / 60)}分${total % 60}秒`
   return h === 0 ? text : `${h}時間${text}`
 }
+
+/**
+ * エピソードの長さを一覧向けに表す。長さがわからない（0 秒）ときは「長さ不明」にする。
+ * @param seconds 再生時間（秒）
+ * @returns 長さの文字列
+ */
+export const formatLength = (seconds: number) => (seconds > 0 ? formatDuration(seconds) : '長さ不明')
