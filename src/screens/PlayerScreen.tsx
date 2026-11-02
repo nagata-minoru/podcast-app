@@ -18,13 +18,14 @@ import type { TabName } from '@/types'
 
 const TAB_NAMES: TabName[] = ['home', 'discover', 'library', 'search']
 
-/** 下部の補助操作。どれもまだ使えないため、理由を短い文字で添えて無効にする */
+/**
+ * 下部の補助操作。どれもまだ使えないため、理由を短い文字で添えて無効にする。
+ * 共有は公開URLを用意するまで表示しない（docs/share.md）。
+ */
 const SUB_ACTIONS = [{
   icon: '☰', label: 'キュー', note: '準備中',
 }, {
   icon: '◎', label: '出力先', note: '準備中',
-}, {
-  icon: '↗', label: '共有予定', note: '使用できません',
 }]
 
 /**
@@ -50,7 +51,7 @@ const DisabledAction = ({ c, icon, label, note }: { c: Palette, icon: string, la
 
 /**
  * 「⋯」のメニュー。再生速度、保存済みへの追加、番組の非表示（非表示なら再表示）が使え、ほかは準備中として表示だけにする。
- * 「問題を報告」は送信先が未設計のため置かない。
+ * 「問題を報告」は送信先が未設計のため、共有は公開URLを用意するまで置かない。
  * @param props.c 色の組
  * @param props.rate 現在の再生速度
  * @param props.onRate 再生速度を切り替える処理
@@ -63,7 +64,6 @@ const DisabledAction = ({ c, icon, label, note }: { c: Palette, icon: string, la
 const MoreMenu = ({ c, rate, onRate, saved, onSave, hidden, onHide }: {
   c: Palette, rate: number, onRate: () => void, saved: boolean, onSave: () => void, hidden: boolean, onHide: () => void,
 }) => {
-  const items = ['キューを表示（準備中）', '共有予定（使用できません）']
   return (
     <View accessibilityRole="menu" style={[styles.menu, { backgroundColor: c.surface, borderColor: c.border }]}>
       <Pressable accessibilityRole="menuitem" onPress={onRate} style={styles.menuItem}>
@@ -75,13 +75,9 @@ const MoreMenu = ({ c, rate, onRate, saved, onSave, hidden, onHide }: {
       <Pressable accessibilityRole="menuitem" onPress={onHide} style={styles.menuItem}>
         <Text style={{ color: c.text }}>{hidden ? '番組を再表示' : '番組を非表示'}</Text>
       </Pressable>
-      {items.map((item) => (
-        <Pressable
-          key={item} disabled accessibilityRole="menuitem" accessibilityState={{ disabled: true }}
-          style={styles.menuItem}>
-          <Text style={{ color: c.subText }}>{item}</Text>
-        </Pressable>
-      ))}
+      <Pressable disabled accessibilityRole="menuitem" accessibilityState={{ disabled: true }} style={styles.menuItem}>
+        <Text style={{ color: c.subText }}>キューを表示（準備中）</Text>
+      </Pressable>
     </View>
   )
 }

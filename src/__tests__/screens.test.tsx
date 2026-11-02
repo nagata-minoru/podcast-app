@@ -58,6 +58,8 @@ describe('主要画面', () => {
     await fireEvent.press(screen.getByText('その31 自販機の新商品について'))
     await fireEvent.press(screen.getByLabelText('その31 自販機の新商品について'))
     await fireEvent.press(screen.getByLabelText('その他の操作'))
+    // 共有は公開URLを用意するまで表示しない
+    expect(screen.queryByText(/共有/)).toBeNull()
     await fireEvent.press(screen.getByText('保存済みに追加'))
     expect(screen.getByText('✓ 保存済みから外す')).toBeOnTheScreen()
   })

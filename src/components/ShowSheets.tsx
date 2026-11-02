@@ -31,8 +31,6 @@ export const ShowMoreItems = ({ show, followed, hidden, onRate, onHide, onUnhide
   const rateNote = rate === undefined ? '設定に合わせる' : formatRate(rate)
   return (
     <>
-      <SheetItem label="番組を共有" note="共有予定" />
-      <SheetItem label="URLをコピー" note="準備中" />
       <SheetItem label="自動ダウンロードを設定" note="準備中" />
       <SheetItem label={`再生速度をこの番組だけ変更（${rateNote}）`} onPress={onRate} />
       {followed && <SheetItem label="通知を設定" note="準備中" />}
@@ -70,7 +68,8 @@ export const ShowRateChoices = ({ show, onDone }: { show: Show, onDone: () => vo
 }
 
 /**
- * エピソードのメニューの項目。保存だけが使え、キュー・ダウンロード・共有は未設計のため押せなくする。
+ * エピソードのメニューの項目。保存だけが使え、キュー・ダウンロードは未設計のため押せなくする。
+ * 共有は公開URLを用意するまで置かない（docs/share.md）。
  * @param props.episode 対象のエピソード
  * @param props.onDone 操作したあとの処理（シートを閉じる）
  * @returns エピソードのメニューの項目
@@ -89,7 +88,6 @@ export const EpisodeMenuItems = ({ episode, onDone }: { episode: Episode, onDone
           onDone()
         }} />
       <SheetItem label="ダウンロード" note="準備中" />
-      <SheetItem label="共有" note="共有予定" />
     </>
   )
 }
