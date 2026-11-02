@@ -53,7 +53,7 @@ describe('再生まわり', () => {
     expect(screen.getByText('0:55')).toBeOnTheScreen()
     await fireEvent.press(screen.getByLabelText('再生速度 1倍'))
     expect(screen.getByText('1.25×')).toBeOnTheScreen()
-    expect(screen.getByLabelText('共有予定、使用できません')).toBeDisabled()
+    expect(screen.queryByText(/共有/)).toBeNull()
   })
 
   it('再生中は時間とともに位置が進む', async () => {

@@ -75,6 +75,7 @@ describe('番組詳細', () => {
     await renderRouter(APP_DIR, { initialUrl: '/discover/show/s2' })
     await fireEvent.press(screen.getByLabelText('第17回 だしのうま味の正体のメニュー'))
     expect(screen.getByLabelText('ダウンロード、準備中')).toBeDisabled()
+    expect(screen.queryByText(/共有/)).toBeNull()
     await fireEvent.press(screen.getByText('保存済みに追加'))
     expect(screen.getByText('○ 未再生・保存済み')).toBeOnTheScreen()
   })
@@ -82,6 +83,7 @@ describe('番組詳細', () => {
   it('番組だけの再生速度を選ぶと、この番組の回を新しく再生するときに使う', async () => {
     await renderRouter(APP_DIR, { initialUrl: '/discover/show/s2' })
     await fireEvent.press(screen.getByLabelText('番組のその他の操作'))
+    expect(screen.queryByText(/共有|URLをコピー/)).toBeNull()
     await fireEvent.press(screen.getByLabelText('再生速度をこの番組だけ変更（設定に合わせる）'))
     await fireEvent.press(screen.getByLabelText('この番組の再生速度 1.25×'))
     expect(screen.getByText('この番組の再生速度: 1.25×')).toBeOnTheScreen()
