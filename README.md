@@ -229,6 +229,9 @@ ESLint や Expo が求める版（`minimatch` 3／10、`glob` 13）より新し�
   有効にすると lint が `TypeError: ... is not a function` で止まります。いまの設定ではどれも使っていません。
 - ESLint のルールを足したら、`yarn lint` が落ちないか確かめてください。
 - ESLint・Expo・Jest が修正版に対応したら `resolutions` を外し、`yarn install` で元の版の決め方に戻します。
+- `resolutions` を外したら、`glob` が 14.0.2 以上、`minimatch` が 11.0.1 以上になっているかを手で確かめます。
+  Dependabot は `resolutions` を考慮せずに誤検出したため、アラート #1・#2 は閉じました。そのため、自動では知らせが来ません。
+  確かめるには `yarn why glob` と `yarn why minimatch` を実行します。
 
 ## 次の作業
 
