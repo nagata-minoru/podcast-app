@@ -1,5 +1,5 @@
 # 依存パッケージの更新を月1回、まとめて PR にする
-# Expo の SDK を上げる更新（Expo・React Native・React の minor / major）は対象外とし、手で `npx expo install` を使って上げる
+# expo の SDK の更新は PR で知らせ、そのブランチで `yarn expo install --fix` を実行してほかのパッケージを揃える
 version: 2
 updates:
   - package-ecosystem: github-actions
@@ -21,8 +21,7 @@ updates:
       default-days: 7
     open-pull-requests-limit: 3
     ignore:
-      - dependency-name: 'expo'
-        update-types: ['version-update:semver-major', 'version-update:semver-minor']
+      # expo 本体は SDK の更新も受け取る。expo-* などは --fix で expo と一緒に上げるため、patch だけにする
       - dependency-name: 'expo-*'
         update-types: ['version-update:semver-major', 'version-update:semver-minor']
       - dependency-name: '@expo/*'
@@ -32,6 +31,12 @@ updates:
       - dependency-name: 'react-dom'
       - dependency-name: 'react-native'
       - dependency-name: 'react-native-*'
+        update-types: ['version-update:semver-major', 'version-update:semver-minor']
+      # eslint-config-expo が ESLint 10 に対応するまで、メジャー更新を受け取らない
+      - dependency-name: 'eslint'
+        update-types: ['version-update:semver-major']
+      # Expo SDK 58 は typescript ~6.0.3 を求めるため、patch 以外を受け取らない
+      - dependency-name: 'typescript'
         update-types: ['version-update:semver-major', 'version-update:semver-minor']
     groups:
       expo-sdk:
