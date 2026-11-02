@@ -1,0 +1,15 @@
+# 下部の4タブを順に切り替え、それぞれの画面が出る
+appId: host.exp.Exponent
+---
+- runFlow: ../subflows/launch.yaml
+- tapOn: "新着・おすすめ"
+- assertVisible: "トップ番組"
+- assertVisible: "新着エピソード"
+- tapOn: "ライブラリ"
+- assertVisible: "登録済み"
+# 番組行は番組名と補足をまとめた1つの要素になるため、部分一致で探す
+- assertVisible: ".*最新: #42 雨の日の通勤を楽しくする方法.*"
+- tapOn: "検索"
+- assertVisible: "人気のテーマ"
+- tapOn: "ホーム"
+- assertVisible: "続きから再生"

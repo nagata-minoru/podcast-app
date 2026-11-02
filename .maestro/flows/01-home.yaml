@@ -1,0 +1,9 @@
+# 起動するとホームタブが開き、続きから再生とトップ番組が見える
+appId: host.exp.Exponent
+---
+- runFlow: ../subflows/launch.yaml
+- assertVisible: "続きから再生"
+- assertVisible: "第18回 卵はなぜ固まるのか"
+- assertVisible: "あなたのトップ番組"
+# 番組行は押せる1つの要素として、番組名と補足をまとめて読み上げるため、部分一致で探す
+- assertVisible: ".*朝の余白ラジオ.*"

@@ -31,7 +31,8 @@
     "web": "expo start --web",
     "typecheck": "tsc --noEmit",
     "lint": "expo lint",
-    "test": "jest"
+    "test": "jest",
+    "e2e": "sh scripts/e2e.sh"
   },
   "private": true,
   "packageManager": "yarn@4.18.1",

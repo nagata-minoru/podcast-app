@@ -1,0 +1,13 @@
+# Expo Go を止めてから開発サーバーの URL で開き直し、毎回ホームから始める
+# 開発サーバー（yarn expo start）がポート 8081 で動いている必要がある
+appId: host.exp.Exponent
+---
+- stopApp
+- openLink: exp://127.0.0.1:8081
+# Expo Go をその端末で初めて使うときだけ出る、開発メニューの案内を閉じる
+- tapOn:
+    text: "Continue"
+    optional: true
+- extendedWaitUntil:
+    visible: "続きから再生"
+    timeout: 60000

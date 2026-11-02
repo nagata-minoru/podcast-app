@@ -26,12 +26,14 @@
 確認済みの範囲は次のとおりです。
 
 - 型チェック（`yarn typecheck`）、lint（`yarn lint`）、テスト（`yarn test`）
+- E2E テスト（`yarn e2e`）。iPhone 16 Pro シミュレータの Expo Go で、起動時のホーム、4タブの切替、
+  新着・おすすめから番組詳細を開いて戻る操作、設定から非表示にした番組を開く操作をタップで通す
 - iOS 向けのバンドル作成（`yarn expo export --platform ios`）
 - `npx expo-doctor` の診断（20項目すべて合格）
 - iOS シミュレータ（iPhone 16、iOS 18.5）の Expo Go で、ホーム、新着・おすすめの番組詳細、ライブラリ、検索、設定が
   表示されること（URL で各画面を直接開いて確認）
 
-タップによる画面遷移の通し確認、ダークテーマ、Android、実機での確認はまだ行っていません。
+ダークテーマ、Android、実機での確認はまだ行っていません。
 
 ## 必要な環境
 
@@ -62,6 +64,7 @@ Web では起動できません。`react-native-web` と `react-dom` が入っ�
 | `yarn typecheck` | 型チェック（`tsc --noEmit`）を行う |
 | `yarn lint` | ESLint（`eslint-config-expo`）で検査する（`expo lint` を実行） |
 | `yarn test` | テスト（Jest）を実行する。`yarn test --watch` で変更のたびに実行する |
+| `yarn e2e` | E2E テスト（Maestro）をシミュレータで実行する。準備は「E2E テスト」を参照 |
 | `yarn expo install <パッケージ>` | SDK に合うバージョンでパッケージを追加する。`yarn add <パッケージ>` は使わない |
 | `npx expo-doctor` | 依存関係と設定の問題を調べる（expo-doctor は依存に含めていないため `npx` で実行する） |
 
@@ -81,6 +84,49 @@ Jest（`jest-expo`）と React Native Testing Library を使います。テス�
 
 画面遷移のテストは `expo-router/testing-library` の `renderRouter` で、シミュレータなしに動かします。
 
+## E2E テスト
+
+[Maestro](https://maestro.dev/) で、シミュレータの Expo Go を実際にタップして確かめます。
+手順は `.maestro/flows/` に、毎回の起動手順は `.maestro/subflows/launch.yaml` に置きます。
+
+| ファイル | 内容 |
+| --- | --- |
+| `01-home.yaml` | 起動するとホームが開き、続きから再生とトップ番組が見える |
+| `02-tabs.yaml` | 下部の4タブを順に切り替える |
+| `03-show-detail.yaml` | 新着・おすすめから番組詳細を開き、戻るボタンで戻る |
+| `04-settings.yaml` | プロフィールボタンから設定を開き、非表示にした番組へ進む |
+
+準備（初回のみ）:
+
+1. Maestro を入れる（Java も一緒に入る）。
+   ```sh
+   brew tap mobile-dev-inc/tap
+   brew install mobile-dev-inc/tap/maestro
+   ```
+2. Homebrew の Java はパスが通らないため、`yarn e2e` は `JAVA_HOME` が未設定なら
+   `/opt/homebrew/opt/openjdk/libexec/openjdk.jdk/Contents/Home` を使います。`maestro` を直接実行する場合は、
+   `~/.zshrc` などで `JAVA_HOME` を設定してください。
+3. シミュレータの Expo Go で開発メニューを開き、「Tools button」を切る。右上に出る歯車のボタンが、
+   ホームのプロフィールボタンに重なってタップを邪魔するためです。
+
+実行:
+
+```sh
+yarn expo start   # 別のターミナルで開発サーバーを起動しておく（ポート 8081）
+yarn e2e
+```
+
+起動中のシミュレータが複数あるときは、`maestro --device <UDID> test .maestro/flows` で端末を指定します
+（UDID は `xcrun simctl list devices booted` で確認できます）。
+
+書き方の注意:
+
+- iOS では、押せる番組行が中の文字（アートワークの頭文字、番組名、補足）を「台, 台所サイエンス, ことこと研究会」のように
+  1つにつなげて読み上げます。Maestro の文字指定は全体一致の正規表現なので、`".*台所サイエンス.*"` のように部分一致で書きます。
+- 番組詳細のヘッダーの戻るボタンは前の画面名を表示するため、下部タブと同じ名前になります。`above` で位置を絞って押します。
+
+CI では実行していません。macOS のランナーとシミュレータが必要なため、ミニプレイヤーができてから検討します。
+
 ## CI
 
 GitHub Actions（`.github/workflows/ci.yml`）で、`main` への push と pull request のたびに、
@@ -91,8 +137,10 @@ GitHub Actions（`.github/workflows/ci.yml`）で、`main` への push と pull 
 ```text
 mobile/
   .github/workflows/ci.yml  # CI（型チェック、lint、テスト）
+  .maestro/                 # E2E テスト（Maestro）。flows/ に手順、subflows/ に共通の起動手順
   app.json                  # アプリ名、scheme、プラグインなどの設定
   eslint.config.js          # ESLint の設定（eslint-config-expo）
+  scripts/e2e.sh            # yarn e2e の本体（JAVA_HOME を補って maestro test を実行）
   src/
     __tests__/              # テスト
     app/                    # 画面（Expo Router）。ここに置いたファイルがそのまま画面になる
