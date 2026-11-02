@@ -1,6 +1,7 @@
-import { createContext, type ReactNode, useContext, useMemo, useState } from 'react'
+import { createContext, type ReactNode, useContext, useMemo } from 'react'
 
 import { library, showPreferences } from '@/data/mock'
+import { useStoredState } from '@/storage/useStoredState'
 
 /** ライブラリと番組ごとの設定の状態と操作 */
 export type LibraryState = {
@@ -45,24 +46,24 @@ export const toggleId = (ids: string[], id: string) => (ids.includes(id) ? ids.f
  */
 const addId = (ids: string[], id: string) => (ids.includes(id) ? ids : [...ids, id])
 
-/**
- * 番組ごとの再生速度を、初期データから作る。
- * @returns 番組 ID と速度の組
- */
-const initialRates = () =>
+/** 保存がないときの、番組ごとの再生速度（初期データから作る） */
+const initialRates: Record<string, number> =
   Object.fromEntries(showPreferences.flatMap((p) => (p.rate === undefined ? [] : [[p.showId, p.rate]])))
+
+/** 保存がないときの、非表示の番組（初期データから作る） */
+const initialHidden = showPreferences.filter((p) => p.hidden).map((p) => p.showId)
 
 /**
  * フォロー中の番組、保存済みのエピソード、非表示の番組、番組ごとの速度を共有する。
- * 初期値は架空のデータで、終了すると元に戻る。
+ * 端末に保存し、保存がなければ架空のデータを初期値にする。
  * @param props.children 配下の画面
  * @returns Provider 要素
  */
 export const LibraryProvider = ({ children }: { children: ReactNode }) => {
-  const [followedShowIds, setFollowed] = useState(library.followedShowIds)
-  const [savedEpisodeIds, setSaved] = useState(library.savedEpisodeIds)
-  const [hiddenShowIds, setHidden] = useState(() => showPreferences.filter((p) => p.hidden).map((p) => p.showId))
-  const [showRates, setShowRates] = useState<Record<string, number>>(initialRates)
+  const [followedShowIds, setFollowed] = useStoredState('followedShowIds', library.followedShowIds)
+  const [savedEpisodeIds, setSaved] = useStoredState('savedEpisodeIds', library.savedEpisodeIds)
+  const [hiddenShowIds, setHidden] = useStoredState('hiddenShowIds', initialHidden)
+  const [showRates, setShowRates] = useStoredState('showRates', initialRates)
   const value = useMemo<LibraryState>(() => ({
     followedShowIds,
     savedEpisodeIds,
@@ -82,7 +83,7 @@ export const LibraryProvider = ({ children }: { children: ReactNode }) => {
       const { [showId]: _, ...rest } = rates
       return rate === undefined ? rest : { ...rest, [showId]: rate }
     }),
-  }), [followedShowIds, savedEpisodeIds, hiddenShowIds, showRates])
+  }), [followedShowIds, savedEpisodeIds, hiddenShowIds, showRates, setFollowed, setSaved, setHidden, setShowRates])
   return <LibraryContext.Provider value={value}>{children}</LibraryContext.Provider>
 }
 

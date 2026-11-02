@@ -11,7 +11,7 @@ import { MIN_TAP, usePalette } from '@/theme'
 /**
  * RSS の URL で番組を追加する（検索タブの補助画面）。検索画面の下の「RSS の URL で追加」から開く。
  * 読み込めたら番組を加えてフォローし、この画面を番組詳細に置き換える。番組詳細から戻ると検索画面に戻る。
- * 追加した番組はアプリの中だけに持ち、アプリを終了すると消える。
+ * 追加した番組は端末に保存し、アプリを終了しても残す。
  * @returns 番組の追加画面
  */
 const AddFeed = () => {
@@ -53,7 +53,6 @@ const AddFeed = () => {
     <Screen>
       <Stack.Screen options={{ title: 'RSS の URL で追加' }} />
       <Text style={{ color: c.text }}>番組の RSS フィードの URL を入力してください。追加した番組はフォローします。</Text>
-      <Text style={{ color: c.subText }}>追加した番組は、アプリを終了すると消えます。</Text>
       <TextInput
         value={url} onChangeText={setUrl} placeholder="https://example.com/feed.xml"
         placeholderTextColor={c.subText} accessibilityLabel="RSS フィードの URL"

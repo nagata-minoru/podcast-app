@@ -1,8 +1,9 @@
 import { act } from '@testing-library/react-native'
 
-// テストごとに、フィードから取り込んだ番組を消して架空のデータだけに戻す。画面が残っていても描き直せるよう act で包む
-import { resetCatalog } from '@/data/catalog'
+// テストごとに保存（Jest ではメモリ上の SQLite）を消し、フィードから取り込んだ番組やライブラリを架空のデータに戻す。
+// 画面が残っていても描き直せるよう act で包む
+import { clearStorage } from '@/storage/storage'
 
 afterEach(async () => {
-  await act(async () => resetCatalog())
+  await act(async () => clearStorage())
 })

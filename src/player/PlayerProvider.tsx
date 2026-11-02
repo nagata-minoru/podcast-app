@@ -1,10 +1,11 @@
-import { createContext, type ReactNode, useContext, useMemo, useReducer } from 'react'
+import { createContext, type ReactNode, useContext, useEffect, useLayoutEffect, useMemo, useReducer, useRef } from 'react'
 
 import { progresses } from '@/data/mock'
 import { useLibrary } from '@/library/LibraryProvider'
 import { clamp, initialPlayerState, playerReducer, type PlayerState, sortByRecent } from '@/player/playerState'
 import { now, useAudioEngine, useLatest } from '@/player/useAudioEngine'
 import { useSettings } from '@/settings/SettingsProvider'
+import { loadProgress, onStorageCleared, saveProgress } from '@/storage/storage'
 import type { Episode, Progress } from '@/types'
 
 /** 画面から使う再生の操作 */
@@ -30,16 +31,28 @@ const PlayerContext = createContext<PlayerValue | null>(null)
 /**
  * 再生状態をアプリ全体で共有する。タブを切り替えても状態は保たれる。
  * 音声は expo-audio で鳴らし（useAudioEngine）、実際の再生位置を状態に返す。
- * 再生位置の記録はアプリの中だけに持ち、終了すると架空のデータに戻る。
+ * 再生位置の記録は端末に保存し、変わった分だけ書く。保存がなければ架空のデータを初期値にする。
+ * 再生中の回と位置（ミニプレイヤー）は保存しない。開き直すと、何も再生していない状態から始まる。
  * @param props.children 配下の画面
  * @returns Provider 要素
  */
 export const PlayerProvider = ({ children }: { children: ReactNode }) => {
-  const [state, dispatch] = useReducer(playerReducer, progresses, initialPlayerState)
+  const [state, dispatch] = useReducer(playerReducer, undefined, () => initialPlayerState(loadProgress() ?? progresses))
   const settingsRate = useSettings().rate
   const { showRates } = useLibrary()
   const moveAudio = useAudioEngine(state, dispatch)
   const stateRef = useLatest(state)
+  /** 最後に保存した記録。これとの違いだけを書く */
+  const savedProgress = useRef(state.progress)
+
+  useEffect(() => {
+    if (state.progress === savedProgress.current) return
+    saveProgress(savedProgress.current, state.progress)
+    savedProgress.current = state.progress
+  }, [state.progress])
+
+  // 子の画面（/dev-reset）の useEffect で消されても受け取れるよう、それより先に動く useLayoutEffect で受け取り始める
+  useLayoutEffect(() => onStorageCleared(() => dispatch({ type: 'reset', progress: progresses })), [])
 
   const controls = useMemo<PlayerControls>(() => {
     /** 状態の位置を動かし、最後まで行かなければ音声の位置も動かす（最後まで行くと再生済みになり止まる） */

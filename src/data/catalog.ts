@@ -1,6 +1,7 @@
 import { useSyncExternalStore } from 'react'
 
 import * as mock from '@/data/mock'
+import { loadFeeds, onStorageCleared, saveFeed, saveFeedEpisode } from '@/storage/storage'
 import type { Episode, Show } from '@/types'
 
 /** 番組とエピソードの一覧。追加や更新のたびに作り直し、同じ中身のあいだは同じものを返す */
@@ -9,7 +10,21 @@ export type Catalog = { shows: Show[], episodes: Episode[] }
 /** 架空のデータだけのカタログ */
 const initial: Catalog = { shows: mock.shows, episodes: mock.episodes }
 
-let current = initial
+/**
+ * 架空のデータに、保存してあるフィードの番組を足したカタログを作る。
+ * @returns カタログ
+ */
+const loadCatalog = (): Catalog => {
+  const feeds = loadFeeds()
+  if (feeds.length === 0) return initial
+  return {
+    shows: [...initial.shows, ...feeds.map((f) => f.show)],
+    episodes: [...initial.episodes, ...feeds.flatMap((f) => f.episodes)],
+  }
+}
+
+/** いまのカタログ。最初に使うときに保存から読む */
+let current: Catalog | undefined
 const listeners = new Set<() => void>()
 
 /**
@@ -25,7 +40,10 @@ const update = (next: Catalog) => {
  * いまのカタログを返す。
  * @returns カタログ
  */
-export const getCatalog = () => current
+export const getCatalog = () => {
+  current ??= loadCatalog()
+  return current
+}
 
 /**
  * フィードから取り込んだ番組を加える。同じ番組がすでにあれば、番組とエピソードを入れ替える。
@@ -33,10 +51,13 @@ export const getCatalog = () => current
  * @param episodes その番組のエピソード
  */
 export const addShow = (show: Show, episodes: Episode[]) => {
+  const { shows, episodes: all } = getCatalog()
+  const exists = shows.some((s) => s.id === show.id)
   update({
-    shows: [...current.shows.filter((s) => s.id !== show.id), show],
-    episodes: [...current.episodes.filter((e) => e.showId !== show.id), ...episodes],
+    shows: exists ? shows.map((s) => (s.id === show.id ? show : s)) : [...shows, show],
+    episodes: [...all.filter((e) => e.showId !== show.id), ...episodes],
   })
+  saveFeed(show, episodes)
 }
 
 /**
@@ -47,13 +68,19 @@ export const addShow = (show: Show, episodes: Episode[]) => {
 export const setEpisodeDuration = (episodeId: string, duration: number) => {
   const episode = findEpisode(episodeId)
   if (!episode || episode.duration === duration) return
-  update({ ...current, episodes: current.episodes.map((e) => (e.id === episodeId ? { ...e, duration } : e)) })
+  const next = { ...episode, duration }
+  const catalog = getCatalog()
+  update({ ...catalog, episodes: catalog.episodes.map((e) => (e.id === episodeId ? next : e)) })
+  saveFeedEpisode(next)
 }
 
-/** 架空のデータだけに戻す（テスト用） */
-export const resetCatalog = () => {
-  if (current !== initial) update(initial)
+/** 保存から読み直す。保存を消したときは架空のデータだけに戻る */
+export const reloadCatalog = () => {
+  const next = loadCatalog()
+  if (next !== current) update(next)
 }
+
+onStorageCleared(reloadCatalog)
 
 /**
  * 変更を受け取る。
@@ -78,14 +105,14 @@ export const useCatalog = () => useSyncExternalStore(subscribe, getCatalog)
  * @param id 番組 ID
  * @returns 番組。見つからなければ undefined
  */
-export const findShow = (id: string) => current.shows.find((s) => s.id === id)
+export const findShow = (id: string) => getCatalog().shows.find((s) => s.id === id)
 
 /**
  * ID からエピソードを探す。
  * @param id エピソード ID
  * @returns エピソード。見つからなければ undefined
  */
-export const findEpisode = (id: string) => current.episodes.find((e) => e.id === id)
+export const findEpisode = (id: string) => getCatalog().episodes.find((e) => e.id === id)
 
 /**
  * 番組のエピソードを新しい順に返す。
@@ -93,4 +120,4 @@ export const findEpisode = (id: string) => current.episodes.find((e) => e.id ===
  * @returns 公開日の新しい順に並べたエピソード
  */
 export const episodesOfShow = (showId: string) =>
-  current.episodes.filter((e) => e.showId === showId).sort((a, b) => b.publishedAt.localeCompare(a.publishedAt))
+  getCatalog().episodes.filter((e) => e.showId === showId).sort((a, b) => b.publishedAt.localeCompare(a.publishedAt))

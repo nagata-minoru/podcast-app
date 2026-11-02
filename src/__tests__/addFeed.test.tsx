@@ -2,8 +2,9 @@ import { act, fireEvent } from '@testing-library/react-native'
 import { router } from 'expo-router'
 import { renderRouter, screen } from 'expo-router/testing-library'
 
-import { addShow, findEpisode, getCatalog, resetCatalog, setEpisodeDuration } from '@/data/catalog'
+import { addShow, findEpisode, getCatalog, setEpisodeDuration } from '@/data/catalog'
 import { fetchFeed } from '@/feed/fetchFeed'
+import { clearStorage } from '@/storage/storage'
 import type { Episode, Show } from '@/types'
 
 /** 実際の画面フォルダ。Jest はプロジェクトの直下で動くため、そこからの相対パスで渡す */
@@ -130,11 +131,11 @@ describe('catalog', () => {
     expect(episodes.filter((e) => e.showId === 'fx').map((e) => e.id)).toEqual(['fx-2'])
   })
 
-  it('再生時間を直し、resetCatalog で架空のデータだけに戻る', () => {
+  it('再生時間を直し、保存を消すと架空のデータだけに戻る', () => {
     addShow(show, [episode])
     setEpisodeDuration('fx-1', 90)
     expect(findEpisode('fx-1')?.duration).toBe(90)
-    resetCatalog()
+    clearStorage()
     expect(findEpisode('fx-1')).toBeUndefined()
   })
 })
