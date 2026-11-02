@@ -1,0 +1,10 @@
+# ホーム右上のプロフィールアイコンから設定を開き、非表示にした番組へ進む
+appId: host.exp.Exponent
+---
+- runFlow: ../subflows/launch.yaml
+- tapOn: "プロフィールと設定"
+- assertVisible: "アカウント"
+- scrollUntilVisible:
+    element: "コンテンツ管理"
+- tapOn: "非表示にした番組.*"
+- assertVisible: "非表示にした番組"

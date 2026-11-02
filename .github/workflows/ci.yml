@@ -1,0 +1,51 @@
+# 型チェック・lint・テストを、main への push とすべての pull request で実行する
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+# 同じブランチで新しい実行が始まったら、古い実行を止める
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v5
+
+      # Node 24 には Yarn 4 を使うための corepack が同梱されている
+      # setup-node の自動キャッシュは corepack を有効にする前に Yarn 1 を呼んで失敗するため切り、下で自前で復元する
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          package-manager-cache: false
+
+      - name: Yarn 4 を有効にする
+        run: corepack enable
+
+      - name: Yarn のキャッシュを復元する
+        uses: actions/cache@v4
+        with:
+          path: ~/.yarn/berry/cache
+          key: yarn-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
+          restore-keys: yarn-${{ runner.os }}-
+
+      - name: 依存関係を入れる
+        run: yarn install --immutable
+
+      - name: 型チェック
+        run: yarn typecheck
+
+      - name: lint
+        run: yarn lint
+
+      - name: テスト
+        run: yarn test --ci
