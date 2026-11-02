@@ -23,4 +23,4 @@ appId: host.exp.Exponent
 # 番組行は番組名と補足をまとめた1つの要素になるため、部分一致で探す
 - assertVisible: ".*夜ふかし雑談所.*未再生 0本.*"
 - tapOn: "履歴"
-- assertVisible: ".*その31 自販機の新商品について.*7:00まで再生.*"
+- assertVisible: ".*その31 自販機の新商品について.*0:50まで再生.*"

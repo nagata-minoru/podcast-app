@@ -10,6 +10,12 @@ describe('formatDuration', () => {
     expect(formatDuration(90)).toBe('2分')
   })
 
+  it('1分に満たないときは秒で表す', () => {
+    expect(formatDuration(59.2)).toBe('60秒')
+    expect(formatDuration(20)).toBe('20秒')
+    expect(formatDuration(0)).toBe('0秒')
+  })
+
   it('60分以上は時間と分で表す', () => {
     expect(formatDuration(60 * 60)).toBe('1時間0分')
     expect(formatDuration(62 * 60)).toBe('1時間2分')

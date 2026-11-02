@@ -15,16 +15,23 @@ export type PlayerState = {
   rate: number
   /** エピソードごとの再生位置。再生位置が動くたびに、再生中の回の記録を書き換える */
   progress: Record<string, Progress>
+  /** 音声を読み込めず、一時停止にしたか。再生し直すと false に戻す */
+  failed: boolean
 }
 
-/** 再生状態を変える操作。at は操作した日時（ISO 8601）で、再生位置の記録の更新日時に使う */
+/**
+ * 再生状態を変える操作。at は操作した日時（ISO 8601）で、再生位置の記録の更新日時に使う。
+ * sync は音声の実際の再生位置を、finish は音声が最後まで鳴ったことを、fail は音声を読み込めなかったことを知らせる。
+ */
 export type PlayerAction =
   | { type: 'play', episode: Episode, rate: number, at: string }
   | { type: 'toggle', at: string }
   | { type: 'seek', delta: number, at: string }
   | { type: 'seekTo', position: number, at: string }
   | { type: 'setRate', rate: number }
-  | { type: 'tick', seconds: number, at: string }
+  | { type: 'sync', position: number, at: string }
+  | { type: 'finish', at: string }
+  | { type: 'fail' }
   | { type: 'close', at: string }
   | { type: 'forget', episodeIds: string[] }
 
@@ -43,7 +50,7 @@ export const RATES = [0.8, 1, 1.25, 1.5, 2] as const
  * @returns idle の状態
  */
 export const idleState = (progress: Record<string, Progress> = {}): PlayerState => ({
-  episode: null, status: 'idle', position: 0, duration: 0, rate: DEFAULT_RATE, progress,
+  episode: null, status: 'idle', position: 0, duration: 0, rate: DEFAULT_RATE, progress, failed: false,
 })
 
 /**
@@ -60,7 +67,7 @@ export const initialPlayerState = (progresses: Progress[]) =>
  * @param duration 再生時間（秒）
  * @returns 範囲内に収めた再生位置
  */
-const clamp = (position: number, duration: number) => Math.min(Math.max(position, 0), duration)
+export const clamp = (position: number, duration: number) => Math.min(Math.max(position, 0), duration)
 
 /**
  * 再生中の回の記録を書き換えた記録の一覧を返す。
@@ -99,10 +106,12 @@ const moveTo = (state: PlayerState, position: number, at: string): PlayerState =
  */
 const play = (state: PlayerState, action: Extract<PlayerAction, { type: 'play' }>): PlayerState => {
   const { episode, rate, at } = action
-  if (state.episode?.id === episode.id && state.status !== 'idle') return { ...state, status: 'playing' }
+  if (state.episode?.id === episode.id && state.status !== 'idle') return { ...state, status: 'playing', failed: false }
   const saved = state.progress[episode.id]
   const position = saved && !saved.completed ? clamp(saved.position, episode.duration) : 0
-  const base: PlayerState = { episode, status: 'playing', duration: episode.duration, position, rate, progress: {} }
+  const base: PlayerState = {
+    episode, status: 'playing', duration: episode.duration, position, rate, progress: {}, failed: false,
+  }
   return { ...base, progress: record({ ...base, progress: state.progress }, position, false, at) }
 }
 
@@ -128,7 +137,7 @@ export const playerReducer = (state: PlayerState, action: PlayerAction): PlayerS
     case 'toggle':
       if (state.status === 'idle') return state
       return {
-        ...state, status: state.status === 'playing' ? 'paused' : 'playing',
+        ...state, status: state.status === 'playing' ? 'paused' : 'playing', failed: false,
         progress: record(state, state.position, false, action.at),
       }
     case 'seek':
@@ -137,9 +146,15 @@ export const playerReducer = (state: PlayerState, action: PlayerAction): PlayerS
       return moveTo(state, action.position, action.at)
     case 'setRate':
       return { ...state, rate: action.rate }
-    case 'tick':
+    case 'sync':
       if (state.status !== 'playing') return state
-      return moveTo(state, state.position + action.seconds * state.rate, action.at)
+      return moveTo(state, action.position, action.at)
+    case 'finish':
+      if (state.status === 'idle') return state
+      return idleState(record(state, state.duration, true, action.at))
+    case 'fail':
+      if (state.status === 'idle') return state
+      return { ...state, status: 'paused', failed: true }
     case 'close':
       if (state.status === 'idle') return state
       return idleState(record(state, state.position, false, action.at))

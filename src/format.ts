@@ -1,9 +1,10 @@
 /**
- * 秒数を「36分」「1時間2分」の形にする。
+ * 秒数を「36分」「1時間2分」の形にする。1分に満たないときは「0分」にならないよう「20秒」の形にする（小数は切り上げ）。
  * @param seconds 秒数
  * @returns 読みやすい長さの文字列
  */
 export const formatDuration = (seconds: number) => {
+  if (seconds < 60) return `${Math.max(0, Math.ceil(seconds))}秒`
   const minutes = Math.round(seconds / 60)
   if (minutes < 60) return `${minutes}分`
   return `${Math.floor(minutes / 60)}時間${minutes % 60}分`

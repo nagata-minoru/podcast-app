@@ -1,8 +1,9 @@
-import { createContext, type ReactNode, useContext, useEffect, useMemo, useReducer } from 'react'
+import { createContext, type ReactNode, useContext, useMemo, useReducer } from 'react'
 
 import { progresses } from '@/data/mock'
 import { useLibrary } from '@/library/LibraryProvider'
-import { initialPlayerState, playerReducer, type PlayerState, sortByRecent } from '@/player/playerState'
+import { clamp, initialPlayerState, playerReducer, type PlayerState, sortByRecent } from '@/player/playerState'
+import { now, useAudioEngine, useLatest } from '@/player/useAudioEngine'
 import { useSettings } from '@/settings/SettingsProvider'
 import type { Episode, Progress } from '@/types'
 
@@ -24,20 +25,11 @@ export type PlayerValue = PlayerState & PlayerControls & {
   history: Progress[]
 }
 
-/** 再生位置を進める間隔（ミリ秒） */
-const TICK_MS = 1000
-
 const PlayerContext = createContext<PlayerValue | null>(null)
 
 /**
- * 現在の日時を ISO 8601 で返す。
- * @returns 日時の文字列
- */
-const now = () => new Date().toISOString()
-
-/**
  * 再生状態をアプリ全体で共有する。タブを切り替えても状態は保たれる。
- * 音声はまだ鳴らさず、再生中は1秒ごとに再生位置を速度の分だけ進める（模擬再生）。
+ * 音声は expo-audio で鳴らし（useAudioEngine）、実際の再生位置を状態に返す。
  * 再生位置の記録はアプリの中だけに持ち、終了すると架空のデータに戻る。
  * @param props.children 配下の画面
  * @returns Provider 要素
@@ -46,23 +38,30 @@ export const PlayerProvider = ({ children }: { children: ReactNode }) => {
   const [state, dispatch] = useReducer(playerReducer, progresses, initialPlayerState)
   const settingsRate = useSettings().rate
   const { showRates } = useLibrary()
+  const moveAudio = useAudioEngine(state, dispatch)
+  const stateRef = useLatest(state)
 
-  useEffect(() => {
-    if (state.status !== 'playing') return
-    const id = setInterval(() => dispatch({ type: 'tick', seconds: TICK_MS / 1000, at: now() }), TICK_MS)
-    return () => clearInterval(id)
-  }, [state.status])
-
-  const controls = useMemo<PlayerControls>(() => ({
-    // 番組ごとの速度があればそれを、なければ設定画面の速度で始める
-    play: (episode) => dispatch({ type: 'play', episode, rate: showRates[episode.showId] ?? settingsRate, at: now() }),
-    toggle: () => dispatch({ type: 'toggle', at: now() }),
-    seek: (delta) => dispatch({ type: 'seek', delta, at: now() }),
-    seekTo: (position) => dispatch({ type: 'seekTo', position, at: now() }),
-    setRate: (rate) => dispatch({ type: 'setRate', rate }),
-    close: () => dispatch({ type: 'close', at: now() }),
-    forget: (episodeIds) => dispatch({ type: 'forget', episodeIds }),
-  }), [settingsRate, showRates])
+  const controls = useMemo<PlayerControls>(() => {
+    /** 状態の位置を動かし、最後まで行かなければ音声の位置も動かす（最後まで行くと再生済みになり止まる） */
+    const seekBoth = (position: number) => {
+      const { status, duration } = stateRef.current
+      dispatch({ type: 'seekTo', position, at: now() })
+      const target = clamp(position, duration)
+      if (status !== 'idle' && target < duration) moveAudio(target)
+    }
+    return {
+      // 番組ごとの速度があればそれを、なければ設定画面の速度で始める
+      play: (episode) => {
+        dispatch({ type: 'play', episode, rate: showRates[episode.showId] ?? settingsRate, at: now() })
+      },
+      toggle: () => dispatch({ type: 'toggle', at: now() }),
+      seek: (delta) => seekBoth(stateRef.current.position + delta),
+      seekTo: seekBoth,
+      setRate: (rate) => dispatch({ type: 'setRate', rate }),
+      close: () => dispatch({ type: 'close', at: now() }),
+      forget: (episodeIds) => dispatch({ type: 'forget', episodeIds }),
+    }
+  }, [settingsRate, showRates, moveAudio, stateRef])
 
   const history = useMemo(() => sortByRecent(state.progress), [state.progress])
   const value = useMemo(() => ({ ...state, ...controls, history }), [state, controls, history])

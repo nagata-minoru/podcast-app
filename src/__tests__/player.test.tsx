@@ -42,15 +42,15 @@ describe('再生まわり', () => {
 
   it('ミニプレイヤーのエピソード名で再生画面を開き、操作できる', async () => {
     await renderRouter(APP_DIR, { initialUrl: '/home' })
-    // 続きから再生の回は、途中の位置（10:00）から始まる
+    // 続きから再生の回は、途中の位置（0:40）から始まる
     await fireEvent.press(screen.getByLabelText('第18回 卵はなぜ固まるのかを再生'))
     await fireEvent.press(screen.getByLabelText('第18回 卵はなぜ固まるのか'))
     expect(screen).toHavePathname('/player')
-    expect(screen.getByText('10:00')).toBeOnTheScreen()
+    expect(screen.getByText('0:40')).toBeOnTheScreen()
     await fireEvent.press(screen.getByLabelText('30秒進む'))
-    expect(screen.getByText('10:30')).toBeOnTheScreen()
+    expect(screen.getByText('1:10')).toBeOnTheScreen()
     await fireEvent.press(screen.getByLabelText('15秒戻る'))
-    expect(screen.getByText('10:15')).toBeOnTheScreen()
+    expect(screen.getByText('0:55')).toBeOnTheScreen()
     await fireEvent.press(screen.getByLabelText('再生速度 1倍'))
     expect(screen.getByText('1.25×')).toBeOnTheScreen()
     expect(screen.getByLabelText('共有予定、使用できません')).toBeDisabled()
@@ -63,7 +63,32 @@ describe('再生まわり', () => {
     await act(async () => {
       jest.advanceTimersByTime(3000)
     })
-    expect(screen.getByText('10:03')).toBeOnTheScreen()
+    expect(screen.getByText('0:43')).toBeOnTheScreen()
+  })
+
+  it('速度を上げると、その分だけ速く進む', async () => {
+    await renderRouter(APP_DIR, { initialUrl: '/home' })
+    await fireEvent.press(screen.getByLabelText('第18回 卵はなぜ固まるのかを再生'))
+    await fireEvent.press(screen.getByLabelText('第18回 卵はなぜ固まるのか'))
+    await fireEvent.press(screen.getByLabelText('再生速度 1倍'))
+    await act(async () => {
+      jest.advanceTimersByTime(4000)
+    })
+    // 1.25倍で4秒たつと、5秒進む
+    expect(screen.getByText('0:45')).toBeOnTheScreen()
+  })
+
+  it('最後まで再生すると、再生済みにしてミニプレイヤーを消す', async () => {
+    await renderRouter(APP_DIR, { initialUrl: '/home' })
+    await fireEvent.press(screen.getByLabelText('第18回 卵はなぜ固まるのかを再生'))
+    // 112秒のうち40秒からなので、72秒で最後まで届く
+    await act(async () => {
+      jest.advanceTimersByTime(73000)
+    })
+    expect(screen.queryByTestId('mini-player')).toBeNull()
+    await fireEvent.press(screen.getByLabelText('ライブラリ'))
+    await fireEvent.press(screen.getByText('履歴'))
+    expect(screen.getAllByText(/再生済み/).length).toBeGreaterThanOrEqual(2)
   })
 
   it('ミニプレイヤーの番組名で、そのタブの中に番組詳細を開く', async () => {

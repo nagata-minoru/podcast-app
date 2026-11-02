@@ -4,7 +4,7 @@ appId: host.exp.Exponent
 - runFlow: ../subflows/launch.yaml
 - assertVisible: "続きから再生"
 # 続きから再生のカードは、番組名・エピソード名・残り時間をまとめて読み上げる
-- assertVisible: "台所サイエンス、第18回 卵はなぜ固まるのか、残り26分"
+- assertVisible: "台所サイエンス、第18回 卵はなぜ固まるのか、残り1分"
 - assertVisible: "あなたのトップ番組"
 # トップ番組のカードは、番組名と分類をまとめて読み上げる
 - assertVisible: "台所サイエンス、科学"

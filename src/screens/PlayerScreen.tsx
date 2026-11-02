@@ -167,6 +167,11 @@ export const PlayerScreen = () => {
             <Text style={{ color: c.subText }}>{formatClock(position)}</Text>
             <Text style={{ color: c.subText }}>{`-${formatClock(duration - position)}`}</Text>
           </View>
+          {player.failed && (
+            <Text accessibilityRole="alert" style={[styles.failed, { color: c.text }]}>
+              ⚠ 音声を読み込めませんでした。再生を押すと、もう一度試します。
+            </Text>
+          )}
           <View style={styles.controls}>
             <Pressable
               accessibilityRole="button" accessibilityLabel={`${SKIP_BACK}秒戻る`}
@@ -214,6 +219,7 @@ const styles = StyleSheet.create({
   title: { fontSize: 20, fontWeight: '700' },
   showLink: { minHeight: MIN_TAP, justifyContent: 'center', alignSelf: 'flex-start' },
   times: { flexDirection: 'row', justifyContent: 'space-between' },
+  failed: { fontSize: 14 },
   controls: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 32, marginTop: 8 },
   skip: { width: 64, height: 64, alignItems: 'center', justifyContent: 'center' },
   main: { width: 88, height: 88, borderRadius: 44, alignItems: 'center', justifyContent: 'center' },

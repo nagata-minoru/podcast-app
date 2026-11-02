@@ -19,7 +19,7 @@ appId: host.exp.Exponent
 - tapOn: "第18回 卵はなぜ固まるのかのメニュー"
 - assertVisible: "ダウンロード、準備中"
 - tapOn: "保存済みに追加"
-- assertVisible: ".*残り26分・保存済み.*"
+- assertVisible: ".*残り1分・保存済み.*"
 # その他メニューから非表示にする
 - tapOn: "番組のその他の操作"
 - tapOn: "番組を非表示"
