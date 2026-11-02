@@ -141,12 +141,14 @@ Expo の版の確認、型チェック、lint、テストを実行します。No
 
 | 対象 | 届く更新 | PR |
 | --- | --- | --- |
-| Expo・React Native・React | 同じ SDK の中の patch だけ | 月1本にまとめる |
+| Expo のパッケージ（`expo`、`expo-*`、`@expo/*`）と `react-native-*` | 同じ SDK の中の patch だけ | 月1本にまとめる |
+| `react`、`react-dom`、`react-native` | 届かない（Expo が版ちょうどで指定するため） | なし |
 | その他のパッケージ | minor と patch | 月1本にまとめる |
 | その他のパッケージのメジャー更新 | 1パッケージずつ | 出たときだけ。同時に開くのは最大3本 |
 | GitHub Actions | すべて | 月1本にまとめる |
 
 - 公開から7日たった版だけを提案します（`cooldown`）。
+- `react`、`react-dom`、`react-native` は patch でも上げると `yarn expo install --check` が失敗するため、すべて対象外です。
 - Expo の SDK を上げる更新（例: 58 → 59）は対象外です。手で `yarn expo install expo@^59` を実行してから
   `yarn expo install --fix` で揃えます。
 - 脆弱性の修正（security updates）は、リポジトリの設定でオンにした場合、この制限とは別に届きます。
