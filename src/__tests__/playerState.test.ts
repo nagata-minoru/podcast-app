@@ -74,6 +74,15 @@ describe('playerReducer', () => {
     expect(playerReducer(paused, { type: 'tick', seconds: 1, at: AT })).toBe(paused)
   })
 
+  it('forget は指定の回の記録だけを消す', () => {
+    const s = playerReducer(initialPlayerState([{
+      episodeId: 'a', position: 1, completed: false, updatedAt: AT,
+    }, {
+      episodeId: 'b', position: 2, completed: true, updatedAt: AT,
+    }]), { type: 'forget', episodeIds: ['a'] })
+    expect(Object.keys(s.progress)).toEqual(['b'])
+  })
+
   it('close で idle に戻り、閉じた位置を記録に残す', () => {
     const s = playerReducer(playing(120), { type: 'close', at: LATER })
     expect(s).toMatchObject({ status: 'idle', episode: null })

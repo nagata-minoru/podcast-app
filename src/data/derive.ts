@@ -1,4 +1,5 @@
 import { episodes, findEpisode, shows } from '@/data/mock'
+import { formatDuration } from '@/format'
 import type { Episode, Progress, Show } from '@/types'
 
 /** 再生位置の記録と、それが指すエピソードの組 */
@@ -44,3 +45,29 @@ export const topShowsByHistory = (history: Progress[]): Show[] => {
  */
 export const unplayedCount = (showId: string, progress: Record<string, Progress>) =>
   episodes.filter((e) => e.showId === showId && !progress[e.id]).length
+
+/** エピソードの再生状況。番組詳細の行と絞り込みに使う */
+export type PlayState = 'unplayed' | 'inProgress' | 'completed'
+
+/**
+ * エピソードの再生状況を返す。
+ * @param progress そのエピソードの再生位置の記録。なければ未再生
+ * @returns 再生状況
+ */
+export const playStateOf = (progress: Progress | undefined): PlayState => {
+  if (!progress) return 'unplayed'
+  return progress.completed ? 'completed' : 'inProgress'
+}
+
+/**
+ * 再生状況を、色に頼らない記号付きの文にする（例: 「○ 未再生」「残り12分」「✓ 再生済み」）。
+ * @param episode エピソード
+ * @param progress そのエピソードの再生位置の記録
+ * @returns 再生状況の文
+ */
+export const playStatusText = (episode: Episode, progress: Progress | undefined) => {
+  const state = playStateOf(progress)
+  if (state === 'unplayed') return '○ 未再生'
+  if (state === 'completed') return '✓ 再生済み'
+  return `残り${formatDuration(episode.duration - (progress?.position ?? 0))}`
+}
