@@ -141,16 +141,20 @@ Expo の版の確認、型チェック、lint、テストを実行します。No
 
 | 対象 | 届く更新 | PR |
 | --- | --- | --- |
-| Expo のパッケージ（`expo`、`expo-*`、`@expo/*`）と `react-native-*` | 同じ SDK の中の patch だけ | 月1本にまとめる |
+| `expo` | patch と、SDK の更新（例: 58 → 59） | 月1本にまとめる |
+| `expo-*`、`@expo/*`、`react-native-*` | 同じ SDK の中の patch だけ | `expo` と同じ PR にまとめる |
 | `react`、`react-dom`、`react-native` | 届かない（Expo が版ちょうどで指定するため） | なし |
+| `typescript` | patch だけ（Expo SDK 58 は `~6.0.3` を求めるため） | その他と同じ PR にまとめる |
+| `eslint` | minor と patch（`eslint-config-expo` 58 は ESLint 10 で動かないため） | その他と同じ PR にまとめる |
 | その他のパッケージ | minor と patch | 月1本にまとめる |
 | その他のパッケージのメジャー更新 | 1パッケージずつ | 出たときだけ。同時に開くのは最大3本 |
 | GitHub Actions | すべて | 月1本にまとめる |
 
 - 公開から7日たった版だけを提案します（`cooldown`）。
 - `react`、`react-dom`、`react-native` は patch でも上げると `yarn expo install --check` が失敗するため、すべて対象外です。
-- Expo の SDK を上げる更新（例: 58 → 59）は対象外です。手で `yarn expo install expo@^59` を実行してから
-  `yarn expo install --fix` で揃えます。
+- Expo の SDK を上げる PR（`expo` だけが上がる）は、CI の「Expo の版の確認」で失敗するのが普通です。
+  その PR のブランチで `yarn expo install --fix` を実行し、ほかのパッケージを新しい SDK の版に揃えてからマージします。
+  このとき `typescript` と `eslint` の ignore も見直します。
 - 脆弱性の修正（security updates）は、リポジトリの設定でオンにした場合、この制限とは別に届きます。
 - `resolutions` で固定した `minimatch` と `glob` は、Dependabot が更新を提案しても固定した版のままになります。
 
