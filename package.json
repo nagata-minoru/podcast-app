@@ -34,6 +34,10 @@
     "test": "jest",
     "e2e": "sh scripts/e2e.sh"
   },
+  "resolutions": {
+    "minimatch": "11.0.3",
+    "glob": "14.0.3"
+  },
   "private": true,
   "packageManager": "yarn@4.18.1",
   "jest": {
