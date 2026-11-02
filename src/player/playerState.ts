@@ -26,6 +26,7 @@ export type PlayerAction =
   | { type: 'setRate', rate: number }
   | { type: 'tick', seconds: number, at: string }
   | { type: 'close', at: string }
+  | { type: 'forget', episodeIds: string[] }
 
 /** 戻る秒数 */
 export const SKIP_BACK = 15
@@ -106,6 +107,15 @@ const play = (state: PlayerState, action: Extract<PlayerAction, { type: 'play' }
 }
 
 /**
+ * 指定のエピソードの再生位置の記録を消す（番組を非表示にするとき、履歴も削除する場合に使う）。
+ * @param progress エピソードごとの再生位置の記録
+ * @param episodeIds 消すエピソードの ID
+ * @returns 消したあとの記録
+ */
+const forget = (progress: Record<string, Progress>, episodeIds: string[]) =>
+  Object.fromEntries(Object.entries(progress).filter(([id]) => !episodeIds.includes(id)))
+
+/**
  * 再生状態の reducer。
  * @param state 現在の状態
  * @param action 操作
@@ -133,6 +143,8 @@ export const playerReducer = (state: PlayerState, action: PlayerAction): PlayerS
     case 'close':
       if (state.status === 'idle') return state
       return idleState(record(state, state.position, false, action.at))
+    case 'forget':
+      return { ...state, progress: forget(state.progress, action.episodeIds) }
   }
 }
 

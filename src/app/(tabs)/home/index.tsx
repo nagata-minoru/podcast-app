@@ -4,6 +4,7 @@ import { Pressable, Text } from 'react-native'
 import { ContinueCard, Shelf, ShowCard } from '@/components/cards'
 import { Empty, Screen, SectionTitle } from '@/components/parts'
 import { inProgress, topShowsByHistory } from '@/data/derive'
+import { useIsHidden } from '@/library/LibraryProvider'
 import { usePlayer } from '@/player/PlayerProvider'
 import { MIN_TAP, usePalette } from '@/theme'
 
@@ -26,13 +27,15 @@ const ProfileButton = () => {
 
 /**
  * ホーム。続きから再生を最優先にし、その下に利用履歴にもとづくトップ番組を横に並べる。
- * どちらも再生位置の記録から作るため、聴くたびに並びが変わる。
+ * どちらも再生位置の記録から作るため、聴くたびに並びが変わる。非表示にした番組は、どちらにも出さない。
  * @returns ホーム画面
  */
 const Home = () => {
   const { history } = usePlayer()
-  const continues = inProgress(history)
-  const top = topShowsByHistory(history)
+  const isHidden = useIsHidden()
+  const continues = inProgress(history).filter(({ episode }) => !isHidden(episode.showId))
+  // 非表示にした番組の回を聴いても、トップ番組には再登場させない
+  const top = topShowsByHistory(history).filter((s) => !isHidden(s.id))
   return (
     <Screen>
       <Stack.Screen options={{ title: 'ホーム', headerRight: () => <ProfileButton /> }} />

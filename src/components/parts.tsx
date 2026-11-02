@@ -4,6 +4,7 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native'
 
 import { findShow } from '@/data/mock'
 import { formatDate, formatDuration } from '@/format'
+import { useIsHidden } from '@/library/LibraryProvider'
 import { usePlayer } from '@/player/PlayerProvider'
 import { MIN_TAP, usePalette } from '@/theme'
 import type { Episode, Show, TabName } from '@/types'
@@ -104,7 +105,7 @@ export const ProgressBar = ({ ratio, height = 4 }: { ratio: number, height?: num
 
 /**
  * エピソードの行。タップすると再生を始め、ミニプレイヤーを出す（再生画面は開かない）。
- * 再生中・一時停止中の回は、色だけでなく記号と文字でも示す。
+ * 再生中・一時停止中の回は、色だけでなく記号と文字でも示す。非表示にした番組の回（保存済み・履歴）には、その旨を添える。
  * @param props.episode エピソード
  * @param props.status 再生状況の文字列（例: 「未再生」「残り12分」）
  * @param props.withShow 番組名も出すか。いろいろな番組の回が混ざる一覧で使う
@@ -119,7 +120,8 @@ export const EpisodeRow = ({ episode, status, withShow = false }: {
   const meta = `${formatDate(episode.publishedAt)}・${formatDuration(episode.duration)}`
   const nowPlaying = player.status === 'playing' ? '▶ 再生中' : '❚❚ 一時停止中'
   const showTitle = withShow ? findShow(episode.showId)?.title : undefined
-  const sub = status ? `${meta}・${status}` : meta
+  const hiddenNote = useIsHidden()(episode.showId) ? '⊘ 非表示の番組' : undefined
+  const sub = [meta, status, hiddenNote].filter(Boolean).join('・')
   // 右端の ▶ は飾りなので、読み上げる文は自分で組み立てる
   const label = [showTitle, episode.title, sub, current ? nowPlaying : undefined].filter(Boolean).join('、')
   return (

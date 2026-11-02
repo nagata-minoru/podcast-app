@@ -1,0 +1,40 @@
+# 番組詳細の操作。フォロー解除と「元に戻す」、エピソードのメニュー、番組の非表示と設定からの再表示を通す
+appId: host.exp.Exponent
+---
+- runFlow: ../subflows/launch.yaml
+- tapOn: "新着・おすすめ"
+- tapOn: "台所サイエンス、1位・科学"
+# フォロー中を押すと確認なしで解除し、通知の「元に戻す」で戻せる
+- tapOn: "台所サイエンスをフォロー"
+- assertVisible: "フォローを解除しました"
+- assertVisible:
+    text: "unchecked"
+    below: "ことこと研究会"
+- tapOn: "元に戻す"
+# フォローボタンは「〇〇をフォロー」と読み上げ、状態は「checked」などの値で示す
+- assertVisible:
+    text: "checked"
+    below: "ことこと研究会"
+# エピソードのメニューは保存だけが使える。画面の下端の行はタブバーと重なるため、上の「再生途中」欄の行を使う
+- tapOn: "第18回 卵はなぜ固まるのかのメニュー"
+- assertVisible: "ダウンロード、準備中"
+- tapOn: "保存済みに追加"
+- assertVisible: ".*残り26分・保存済み.*"
+# その他メニューから非表示にする
+- tapOn: "番組のその他の操作"
+- tapOn: "番組を非表示"
+- assertVisible: "「台所サイエンス」を非表示にしますか？"
+- tapOn: "非表示にする"
+- assertVisible: "番組を非表示にしました。.*"
+- assertVisible: ".*非表示にしている番組です.*"
+# 設定の「非表示にした番組」から再表示する。ヘッダーの戻るボタンは下部タブと同じ名前のため、番組名より上を押す
+- tapOn:
+    text: "新着・おすすめ"
+    above: "ことこと研究会"
+- tapOn: "ホーム"
+- tapOn: "プロフィールと設定"
+- scrollUntilVisible:
+    element: "コンテンツ管理"
+- tapOn: "非表示にした番組.*"
+- tapOn: "台所サイエンスを再表示"
+- assertVisible: "非表示にした番組はありません。"

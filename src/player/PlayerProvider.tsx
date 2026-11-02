@@ -1,6 +1,7 @@
 import { createContext, type ReactNode, useContext, useEffect, useMemo, useReducer } from 'react'
 
-import { progresses, showPreferences } from '@/data/mock'
+import { progresses } from '@/data/mock'
+import { useLibrary } from '@/library/LibraryProvider'
 import { initialPlayerState, playerReducer, type PlayerState, sortByRecent } from '@/player/playerState'
 import { useSettings } from '@/settings/SettingsProvider'
 import type { Episode, Progress } from '@/types'
@@ -13,6 +14,8 @@ export type PlayerControls = {
   seekTo: (position: number) => void
   setRate: (rate: number) => void
   close: () => void
+  /** 指定のエピソードの再生位置の記録を消す */
+  forget: (episodeIds: string[]) => void
 }
 
 /** 画面から使う再生の情報 */
@@ -25,15 +28,6 @@ export type PlayerValue = PlayerState & PlayerControls & {
 const TICK_MS = 1000
 
 const PlayerContext = createContext<PlayerValue | null>(null)
-
-/**
- * 再生を始める速度を決める。番組ごとの速度があればそれを、なければ設定画面の速度を使う。
- * @param episode エピソード
- * @param settingsRate 設定画面の再生速度
- * @returns 再生速度
- */
-export const startRate = (episode: Episode, settingsRate: number) =>
-  showPreferences.find((p) => p.showId === episode.showId)?.rate ?? settingsRate
 
 /**
  * 現在の日時を ISO 8601 で返す。
@@ -51,6 +45,7 @@ const now = () => new Date().toISOString()
 export const PlayerProvider = ({ children }: { children: ReactNode }) => {
   const [state, dispatch] = useReducer(playerReducer, progresses, initialPlayerState)
   const settingsRate = useSettings().rate
+  const { showRates } = useLibrary()
 
   useEffect(() => {
     if (state.status !== 'playing') return
@@ -59,13 +54,15 @@ export const PlayerProvider = ({ children }: { children: ReactNode }) => {
   }, [state.status])
 
   const controls = useMemo<PlayerControls>(() => ({
-    play: (episode) => dispatch({ type: 'play', episode, rate: startRate(episode, settingsRate), at: now() }),
+    // 番組ごとの速度があればそれを、なければ設定画面の速度で始める
+    play: (episode) => dispatch({ type: 'play', episode, rate: showRates[episode.showId] ?? settingsRate, at: now() }),
     toggle: () => dispatch({ type: 'toggle', at: now() }),
     seek: (delta) => dispatch({ type: 'seek', delta, at: now() }),
     seekTo: (position) => dispatch({ type: 'seekTo', position, at: now() }),
     setRate: (rate) => dispatch({ type: 'setRate', rate }),
     close: () => dispatch({ type: 'close', at: now() }),
-  }), [settingsRate])
+    forget: (episodeIds) => dispatch({ type: 'forget', episodeIds }),
+  }), [settingsRate, showRates])
 
   const history = useMemo(() => sortByRecent(state.progress), [state.progress])
   const value = useMemo(() => ({ ...state, ...controls, history }), [state, controls, history])

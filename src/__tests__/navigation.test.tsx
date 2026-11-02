@@ -25,7 +25,7 @@ describe('画面遷移', () => {
     await renderRouter(APP_DIR, { initialUrl: '/discover' })
     await fireEvent.press(screen.getByLabelText('台所サイエンス、1位・科学'))
     expect(screen).toHavePathname('/discover/show/s2')
-    expect(screen.getByText('第18回 卵はなぜ固まるのか')).toBeOnTheScreen()
+    expect(screen.getByText('第17回 だしのうま味の正体')).toBeOnTheScreen()
   })
 
   it('ホーム右上のプロフィールアイコンから設定を開く', async () => {

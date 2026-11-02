@@ -1,4 +1,7 @@
-import { inProgress, topShowsByHistory, unplayedCount, withEpisodes } from '@/data/derive'
+import { episodes } from '@/data/mock'
+import {
+  inProgress, playStatusText, topShowsByHistory, unplayedCount, withEpisodes,
+} from '@/data/derive'
 import type { Progress } from '@/types'
 
 /**
@@ -30,5 +33,12 @@ describe('再生位置の記録からの集計', () => {
     expect(unplayedCount('s1', {})).toBe(2)
     expect(unplayedCount('s1', { e2: p('e2', true) })).toBe(1)
     expect(unplayedCount('s1', { e1: p('e1'), e2: p('e2', true) })).toBe(0)
+  })
+
+  it('playStatusText は再生状況を記号付きの文にする', () => {
+    const e3 = episodes.find((e) => e.id === 'e3')!
+    expect(playStatusText(e3, undefined)).toBe('○ 未再生')
+    expect(playStatusText(e3, { ...p('e3'), position: 600 })).toBe('残り26分')
+    expect(playStatusText(e3, p('e3', true))).toBe('✓ 再生済み')
   })
 })

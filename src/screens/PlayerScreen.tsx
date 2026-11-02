@@ -3,12 +3,14 @@ import { useState } from 'react'
 import { Pressable, StyleSheet, Text, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
+import { HideShowSheet } from '@/components/HideShowSheet'
 import { playPauseLabel } from '@/components/MiniPlayer'
 import { Artwork } from '@/components/parts'
 import { SeekBar } from '@/components/SeekBar'
 import { findShow } from '@/data/mock'
 import { formatClock } from '@/format'
 import { useLibrary } from '@/library/LibraryProvider'
+import { useShowActions } from '@/library/useShowActions'
 import { usePlayer } from '@/player/PlayerProvider'
 import { formatRate, nextRate, SKIP_BACK, SKIP_FORWARD } from '@/player/playerState'
 import { MIN_TAP, type Palette, usePalette } from '@/theme'
@@ -47,19 +49,21 @@ const DisabledAction = ({ c, icon, label, note }: { c: Palette, icon: string, la
 )
 
 /**
- * 「⋯」のメニュー。再生速度と保存済みへの追加が使え、ほかは準備中として表示だけにする。
+ * 「⋯」のメニュー。再生速度、保存済みへの追加、番組の非表示（非表示なら再表示）が使え、ほかは準備中として表示だけにする。
  * 「問題を報告」は送信先が未設計のため置かない。
  * @param props.c 色の組
  * @param props.rate 現在の再生速度
  * @param props.onRate 再生速度を切り替える処理
  * @param props.saved 再生中の回が保存済みか
  * @param props.onSave 保存済みへの追加・削除を切り替える処理
+ * @param props.hidden 再生中の回の番組が非表示か
+ * @param props.onHide 非表示の確認を開く（非表示なら再表示する）処理
  * @returns メニュー
  */
-const MoreMenu = ({ c, rate, onRate, saved, onSave }: {
-  c: Palette, rate: number, onRate: () => void, saved: boolean, onSave: () => void,
+const MoreMenu = ({ c, rate, onRate, saved, onSave, hidden, onHide }: {
+  c: Palette, rate: number, onRate: () => void, saved: boolean, onSave: () => void, hidden: boolean, onHide: () => void,
 }) => {
-  const items = ['キューを表示（準備中）', '共有予定（使用できません）', '番組を非表示（準備中）']
+  const items = ['キューを表示（準備中）', '共有予定（使用できません）']
   return (
     <View accessibilityRole="menu" style={[styles.menu, { backgroundColor: c.surface, borderColor: c.border }]}>
       <Pressable accessibilityRole="menuitem" onPress={onRate} style={styles.menuItem}>
@@ -67,6 +71,9 @@ const MoreMenu = ({ c, rate, onRate, saved, onSave }: {
       </Pressable>
       <Pressable accessibilityRole="menuitem" onPress={onSave} style={styles.menuItem}>
         <Text style={{ color: c.text }}>{saved ? '✓ 保存済みから外す' : '保存済みに追加'}</Text>
+      </Pressable>
+      <Pressable accessibilityRole="menuitem" onPress={onHide} style={styles.menuItem}>
+        <Text style={{ color: c.text }}>{hidden ? '番組を再表示' : '番組を非表示'}</Text>
       </Pressable>
       {items.map((item) => (
         <Pressable
@@ -89,11 +96,21 @@ export const PlayerScreen = () => {
   const player = usePlayer()
   const library = useLibrary()
   const [menuOpen, setMenuOpen] = useState(false)
+  const [hideOpen, setHideOpen] = useState(false)
   const params = useLocalSearchParams<{ tab?: string }>()
   const tab = TAB_NAMES.find((t) => t === params.tab) ?? 'home'
   const { episode, status, position, duration, rate } = player
   const show = episode ? findShow(episode.showId) : undefined
   const { icon, label } = playPauseLabel(status === 'playing')
+  // 非表示にしても再生とミニプレイヤーは続ける（docs/show-detail.md「再生中の番組を非表示にした場合」）
+  const actions = useShowActions(show)
+
+  /** メニューの「番組を非表示」。非表示の番組なら、確認なしで再表示する */
+  const onHide = () => {
+    setMenuOpen(false)
+    if (actions.hidden) actions.unhide()
+    else setHideOpen(true)
+  }
 
   /** 再生画面を閉じてから番組詳細を開く */
   const openShow = () => {
@@ -121,7 +138,16 @@ export const PlayerScreen = () => {
       {menuOpen && episode && (
         <MoreMenu
           c={c} rate={rate} onRate={() => player.setRate(nextRate(rate))}
-          saved={library.savedEpisodeIds.includes(episode.id)} onSave={() => library.toggleSaved(episode.id)} />
+          saved={library.savedEpisodeIds.includes(episode.id)} onSave={() => library.toggleSaved(episode.id)}
+          hidden={actions.hidden} onHide={onHide} />
+      )}
+      {show && (
+        <HideShowSheet
+          show={show} visible={hideOpen} followed={actions.followed} onClose={() => setHideOpen(false)}
+          onHide={(deleteData) => {
+            setHideOpen(false)
+            actions.hide(deleteData)
+          }} />
       )}
       {!episode || status === 'idle' ? (
         <Text style={[styles.empty, { color: c.subText }]}>再生中のエピソードはありません。</Text>
@@ -169,6 +195,7 @@ export const PlayerScreen = () => {
           </View>
         </View>
       )}
+      {actions.toast}
     </SafeAreaView>
   )
 }
