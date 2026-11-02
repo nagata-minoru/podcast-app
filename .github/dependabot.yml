@@ -1,0 +1,45 @@
+# 依存パッケージの更新を月1回、まとめて PR にする
+# Expo の SDK を上げる更新（Expo・React Native・React の minor / major）は対象外とし、手で `npx expo install` を使って上げる
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly
+    groups:
+      actions:
+        patterns: ['*']
+    commit-message:
+      prefix: 'ci'
+
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: monthly
+    # 公開から7日たった版だけを提案する（乗っ取られた版をすぐ取り込まないため）
+    cooldown:
+      default-days: 7
+    open-pull-requests-limit: 3
+    ignore:
+      - dependency-name: 'expo'
+        update-types: ['version-update:semver-major', 'version-update:semver-minor']
+      - dependency-name: 'expo-*'
+        update-types: ['version-update:semver-major', 'version-update:semver-minor']
+      - dependency-name: '@expo/*'
+        update-types: ['version-update:semver-major', 'version-update:semver-minor']
+      - dependency-name: 'react'
+        update-types: ['version-update:semver-major', 'version-update:semver-minor']
+      - dependency-name: 'react-dom'
+        update-types: ['version-update:semver-major', 'version-update:semver-minor']
+      - dependency-name: 'react-native'
+        update-types: ['version-update:semver-major', 'version-update:semver-minor']
+      - dependency-name: 'react-native-*'
+        update-types: ['version-update:semver-major', 'version-update:semver-minor']
+    groups:
+      expo-sdk:
+        patterns: ['expo', 'expo-*', '@expo/*', 'react', 'react-dom', 'react-native', 'react-native-*']
+      others:
+        patterns: ['*']
+        update-types: ['minor', 'patch']
+    commit-message:
+      prefix: 'deps'

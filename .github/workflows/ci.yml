@@ -41,6 +41,10 @@ jobs:
       - name: 依存関係を入れる
         run: yarn install --immutable
 
+      # Expo の SDK と版が合わない依存パッケージがあれば失敗させる
+      - name: Expo の版の確認
+        run: yarn expo install --check
+
       - name: 型チェック
         run: yarn typecheck
 

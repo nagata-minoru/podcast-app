@@ -130,13 +130,34 @@ CI では実行していません。macOS のランナーとシミュレータ�
 ## CI
 
 GitHub Actions（`.github/workflows/ci.yml`）で、`main` への push と pull request のたびに、
-型チェック、lint、テストを実行します。Node.js 24 と、corepack で有効にした Yarn 4 を使います。
+Expo の版の確認、型チェック、lint、テストを実行します。Node.js 24 と、corepack で有効にした Yarn 4 を使います。
+
+- Expo の版の確認（`yarn expo install --check`）は、SDK と版が合わない依存パッケージがあると失敗します。
+  直すときは `yarn expo install --fix` を実行します。
+
+### 依存パッケージの自動更新（Dependabot）
+
+`.github/dependabot.yml` で、依存パッケージの更新を月1回、まとめて PR にします。
+
+| 対象 | 届く更新 | PR |
+| --- | --- | --- |
+| Expo・React Native・React | 同じ SDK の中の patch だけ | 月1本にまとめる |
+| その他のパッケージ | minor と patch | 月1本にまとめる |
+| その他のパッケージのメジャー更新 | 1パッケージずつ | 出たときだけ。同時に開くのは最大3本 |
+| GitHub Actions | すべて | 月1本にまとめる |
+
+- 公開から7日たった版だけを提案します（`cooldown`）。
+- Expo の SDK を上げる更新（例: 58 → 59）は対象外です。手で `yarn expo install expo@^59` を実行してから
+  `yarn expo install --fix` で揃えます。
+- 脆弱性の修正（security updates）は、リポジトリの設定でオンにした場合、この制限とは別に届きます。
+- `resolutions` で固定した `minimatch` と `glob` は、Dependabot が更新を提案しても固定した版のままになります。
 
 ## ディレクトリ構成
 
 ```text
 mobile/
-  .github/workflows/ci.yml  # CI（型チェック、lint、テスト）
+  .github/dependabot.yml    # 依存パッケージの自動更新の設定
+  .github/workflows/ci.yml  # CI（Expo の版の確認、型チェック、lint、テスト）
   .maestro/                 # E2E テスト（Maestro）。flows/ に手順、subflows/ に共通の起動手順
   app.json                  # アプリ名、scheme、プラグインなどの設定
   eslint.config.js          # ESLint の設定（eslint-config-expo）
