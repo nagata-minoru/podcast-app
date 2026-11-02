@@ -1,9 +1,23 @@
-# ホーム右上のプロフィールアイコンから設定を開き、非表示にした番組へ進む
+# ホーム右上のプロフィールアイコンから設定を開き、テーマを切り替え、非表示にした番組へ進む
 appId: host.exp.Exponent
 ---
 - runFlow: ../subflows/launch.yaml
 - tapOn: "プロフィールと設定"
 - assertVisible: "アカウント"
+- assertVisible: "自動ダウンロード、準備中"
+- scrollUntilVisible:
+    element: "テーマ ダーク"
+- tapOn: "テーマ ダーク"
+# iOS では選択状態を「radio button, checked」という値で読み上げる。テーマの選択肢は「ライト」の上下に並ぶ
+- assertVisible:
+    text: "radio button, checked"
+    below: "テーマ ライト"
+# ほかのフローに影響しないよう、端末に合わせる設定へ戻す
+- tapOn: "テーマ 端末に合わせる"
+- assertVisible:
+    text: "radio button, checked"
+    above: "テーマ ライト"
+    below: "テーマ"
 - scrollUntilVisible:
     element: "コンテンツ管理"
 - tapOn: "非表示にした番組.*"

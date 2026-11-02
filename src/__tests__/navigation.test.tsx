@@ -21,9 +21,9 @@ describe('画面遷移', () => {
     expect(screen).toHavePathname('/discover')
   })
 
-  it('番組行を押すと、そのタブの中で番組詳細を開く', async () => {
+  it('番組カードを押すと、そのタブの中で番組詳細を開く', async () => {
     await renderRouter(APP_DIR, { initialUrl: '/discover' })
-    await fireEvent.press(screen.getByText('台所サイエンス'))
+    await fireEvent.press(screen.getByLabelText('台所サイエンス、1位・科学'))
     expect(screen).toHavePathname('/discover/show/s2')
     expect(screen.getByText('第18回 卵はなぜ固まるのか')).toBeOnTheScreen()
   })

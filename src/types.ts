@@ -32,6 +32,14 @@ export type Progress = {
   updatedAt: string
 }
 
+/** 新着・おすすめの「注目の特集」。番組を1つ取り上げる */
+export type Feature = {
+  id: string
+  showId: string
+  title: string
+  description: string
+}
+
 /** ライブラリの内容 */
 export type Library = {
   followedShowIds: string[]

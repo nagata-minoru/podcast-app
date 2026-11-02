@@ -2,6 +2,7 @@ import { Link } from 'expo-router'
 import type { ReactNode } from 'react'
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native'
 
+import { findShow } from '@/data/mock'
 import { formatDate, formatDuration } from '@/format'
 import { usePlayer } from '@/player/PlayerProvider'
 import { MIN_TAP, usePalette } from '@/theme'
@@ -15,7 +16,10 @@ import type { Episode, Show, TabName } from '@/types'
 export const Screen = ({ children }: { children: ReactNode }) => {
   const c = usePalette()
   return (
-    <ScrollView style={{ backgroundColor: c.background }} contentContainerStyle={styles.screen}>
+    // キーボードを出したままでも、1回のタップでボタンが反応するようにする（検索結果のフォローなど）
+    <ScrollView
+      keyboardShouldPersistTaps="handled" style={{ backgroundColor: c.background }}
+      contentContainerStyle={styles.screen}>
       {children}
     </ScrollView>
   )
@@ -71,29 +75,67 @@ export const ShowRow = ({ show, tab, note }: { show: Show, tab: TabName, note?: 
 }
 
 /**
+ * 何もないときの案内文。
+ * @param props.text 案内の文字列
+ * @returns 案内文
+ */
+export const Empty = ({ text }: { text: string }) => {
+  const c = usePalette()
+  return <Text style={[styles.rowSub, { color: c.subText }]}>{text}</Text>
+}
+
+/**
+ * 進み具合の細い棒。読み上げは隣の文字（「残り12分」など）に任せる。
+ * @param props.ratio 進み具合（0〜1）
+ * @param props.height 棒の太さ
+ * @returns 進み具合の棒
+ */
+export const ProgressBar = ({ ratio, height = 4 }: { ratio: number, height?: number }) => {
+  const c = usePalette()
+  const width = `${Math.min(Math.max(ratio, 0), 1) * 100}%` as const
+  return (
+    <View
+      accessible={false}
+      style={{ height, borderRadius: height / 2, backgroundColor: c.border, overflow: 'hidden' }}>
+      <View style={{ width, height, backgroundColor: c.accent }} />
+    </View>
+  )
+}
+
+/**
  * エピソードの行。タップすると再生を始め、ミニプレイヤーを出す（再生画面は開かない）。
  * 再生中・一時停止中の回は、色だけでなく記号と文字でも示す。
  * @param props.episode エピソード
  * @param props.status 再生状況の文字列（例: 「未再生」「残り12分」）
+ * @param props.withShow 番組名も出すか。いろいろな番組の回が混ざる一覧で使う
  * @returns エピソード行
  */
-export const EpisodeRow = ({ episode, status }: { episode: Episode, status?: string }) => {
+export const EpisodeRow = ({ episode, status, withShow = false }: {
+  episode: Episode, status?: string, withShow?: boolean,
+}) => {
   const c = usePalette()
   const player = usePlayer()
   const current = player.episode?.id === episode.id && player.status !== 'idle'
   const meta = `${formatDate(episode.publishedAt)}・${formatDuration(episode.duration)}`
   const nowPlaying = player.status === 'playing' ? '▶ 再生中' : '❚❚ 一時停止中'
+  const showTitle = withShow ? findShow(episode.showId)?.title : undefined
+  const sub = status ? `${meta}・${status}` : meta
+  // 右端の ▶ は飾りなので、読み上げる文は自分で組み立てる
+  const label = [showTitle, episode.title, sub, current ? nowPlaying : undefined].filter(Boolean).join('、')
   return (
     <Pressable
       accessibilityRole="button"
+      accessibilityLabel={label}
       accessibilityHint={current ? undefined : '再生を始めます'}
       onPress={() => player.play(episode)}
       style={styles.row}>
       <View style={styles.rowBody}>
+        {showTitle && <Text style={[styles.rowSub, { color: c.subText }]}>{showTitle}</Text>}
         <Text style={[styles.rowTitle, { color: c.text }]}>{episode.title}</Text>
-        <Text style={[styles.rowSub, { color: c.subText }]}>{status ? `${meta}・${status}` : meta}</Text>
+        <Text style={[styles.rowSub, { color: c.subText }]}>{sub}</Text>
         {current && <Text style={[styles.rowSub, { color: c.text, fontWeight: '700' }]}>{nowPlaying}</Text>}
       </View>
+      {!current && <Text style={{ color: c.subText, fontSize: 16 }}>▶</Text>}
     </Pressable>
   )
 }

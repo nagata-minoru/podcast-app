@@ -1,4 +1,4 @@
-import type { Episode, Library, Progress, Show, ShowPreference } from '@/types'
+import type { Episode, Feature, Library, Progress, Show, ShowPreference } from '@/types'
 
 // すべて架空のデータ。実在する番組名・配信者名は使わない。
 
@@ -52,6 +52,11 @@ export const library: Library = {
   followedShowIds: ['s1', 's2'],
   savedEpisodeIds: ['e5'],
 }
+
+export const features: Feature[] = [{
+  id: 'f1', showId: 's2', title: '台所から始める秋の科学',
+  description: '身近な料理の疑問を、実験しながら解き明かす回を集めました。',
+}]
 
 export const showPreferences: ShowPreference[] = []
 
