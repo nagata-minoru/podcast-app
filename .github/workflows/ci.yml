@@ -19,11 +19,11 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
 
       # Node 24 には Yarn 4 を使うための corepack が同梱されている
       # setup-node の自動キャッシュは corepack を有効にする前に Yarn 1 を呼んで失敗するため切り、下で自前で復元する
-      - uses: actions/setup-node@v5
+      - uses: actions/setup-node@v7
         with:
           node-version: 24
           package-manager-cache: false
@@ -32,7 +32,7 @@ jobs:
         run: corepack enable
 
       - name: Yarn のキャッシュを復元する
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: ~/.yarn/berry/cache
           key: yarn-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
