@@ -43,7 +43,7 @@ describe('再生まわり', () => {
   it('ミニプレイヤーのエピソード名で再生画面を開き、操作できる', async () => {
     await renderRouter(APP_DIR, { initialUrl: '/home' })
     // 続きから再生の回は、途中の位置（10:00）から始まる
-    await fireEvent.press(screen.getByText('第18回 卵はなぜ固まるのか'))
+    await fireEvent.press(screen.getByLabelText('第18回 卵はなぜ固まるのかを再生'))
     await fireEvent.press(screen.getByLabelText('第18回 卵はなぜ固まるのか'))
     expect(screen).toHavePathname('/player')
     expect(screen.getByText('10:00')).toBeOnTheScreen()
@@ -58,7 +58,7 @@ describe('再生まわり', () => {
 
   it('再生中は時間とともに位置が進む', async () => {
     await renderRouter(APP_DIR, { initialUrl: '/home' })
-    await fireEvent.press(screen.getByText('第18回 卵はなぜ固まるのか'))
+    await fireEvent.press(screen.getByLabelText('第18回 卵はなぜ固まるのかを再生'))
     await fireEvent.press(screen.getByLabelText('第18回 卵はなぜ固まるのか'))
     await act(async () => {
       jest.advanceTimersByTime(3000)

@@ -8,6 +8,7 @@ import { Artwork } from '@/components/parts'
 import { SeekBar } from '@/components/SeekBar'
 import { findShow } from '@/data/mock'
 import { formatClock } from '@/format'
+import { useLibrary } from '@/library/LibraryProvider'
 import { usePlayer } from '@/player/PlayerProvider'
 import { formatRate, nextRate, SKIP_BACK, SKIP_FORWARD } from '@/player/playerState'
 import { MIN_TAP, type Palette, usePalette } from '@/theme'
@@ -46,19 +47,26 @@ const DisabledAction = ({ c, icon, label, note }: { c: Palette, icon: string, la
 )
 
 /**
- * 「⋯」のメニュー。再生速度だけが使え、ほかは準備中として表示だけにする。
+ * 「⋯」のメニュー。再生速度と保存済みへの追加が使え、ほかは準備中として表示だけにする。
  * 「問題を報告」は送信先が未設計のため置かない。
  * @param props.c 色の組
  * @param props.rate 現在の再生速度
  * @param props.onRate 再生速度を切り替える処理
+ * @param props.saved 再生中の回が保存済みか
+ * @param props.onSave 保存済みへの追加・削除を切り替える処理
  * @returns メニュー
  */
-const MoreMenu = ({ c, rate, onRate }: { c: Palette, rate: number, onRate: () => void }) => {
-  const items = ['キューを表示（準備中）', '保存済みに追加（準備中）', '共有予定（使用できません）', '番組を非表示（準備中）']
+const MoreMenu = ({ c, rate, onRate, saved, onSave }: {
+  c: Palette, rate: number, onRate: () => void, saved: boolean, onSave: () => void,
+}) => {
+  const items = ['キューを表示（準備中）', '共有予定（使用できません）', '番組を非表示（準備中）']
   return (
     <View accessibilityRole="menu" style={[styles.menu, { backgroundColor: c.surface, borderColor: c.border }]}>
       <Pressable accessibilityRole="menuitem" onPress={onRate} style={styles.menuItem}>
         <Text style={{ color: c.text }}>{`再生速度（${formatRate(rate)}）`}</Text>
+      </Pressable>
+      <Pressable accessibilityRole="menuitem" onPress={onSave} style={styles.menuItem}>
+        <Text style={{ color: c.text }}>{saved ? '✓ 保存済みから外す' : '保存済みに追加'}</Text>
       </Pressable>
       {items.map((item) => (
         <Pressable
@@ -79,6 +87,7 @@ const MoreMenu = ({ c, rate, onRate }: { c: Palette, rate: number, onRate: () =>
 export const PlayerScreen = () => {
   const c = usePalette()
   const player = usePlayer()
+  const library = useLibrary()
   const [menuOpen, setMenuOpen] = useState(false)
   const params = useLocalSearchParams<{ tab?: string }>()
   const tab = TAB_NAMES.find((t) => t === params.tab) ?? 'home'
@@ -109,7 +118,11 @@ export const PlayerScreen = () => {
           </Pressable>
         )}
       </View>
-      {menuOpen && episode && <MoreMenu c={c} rate={rate} onRate={() => player.setRate(nextRate(rate))} />}
+      {menuOpen && episode && (
+        <MoreMenu
+          c={c} rate={rate} onRate={() => player.setRate(nextRate(rate))}
+          saved={library.savedEpisodeIds.includes(episode.id)} onSave={() => library.toggleSaved(episode.id)} />
+      )}
       {!episode || status === 'idle' ? (
         <Text style={[styles.empty, { color: c.subText }]}>再生中のエピソードはありません。</Text>
       ) : (

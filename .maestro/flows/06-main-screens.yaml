@@ -1,0 +1,26 @@
+# 新着・おすすめの特集、検索からのフォロー、ライブラリへの反映、履歴の再生位置
+appId: host.exp.Exponent
+---
+- runFlow: ../subflows/launch.yaml
+- tapOn: "新着・おすすめ"
+- assertVisible: "注目の特集"
+# 特集のカードは、特集名・番組名・説明をまとめて読み上げるため、部分一致で探す
+- tapOn: "特集、台所から始める秋の科学.*"
+- assertVisible: "ことこと研究会"
+- tapOn: "検索"
+- tapOn: "番組・エピソード・テーマを検索"
+- inputText: "雑談"
+# フォローボタンは「〇〇をフォロー」と読み上げ、状態は「checked」などの値で示す
+- assertVisible:
+    text: "unchecked"
+    rightOf: "夜, 夜ふかし雑談所, .*"
+- tapOn: "夜ふかし雑談所をフォロー"
+- assertVisible:
+    text: "checked"
+    rightOf: "夜, 夜ふかし雑談所, .*"
+- hideKeyboard
+- tapOn: "ライブラリ"
+# 番組行は番組名と補足をまとめた1つの要素になるため、部分一致で探す
+- assertVisible: ".*夜ふかし雑談所.*未再生 0本.*"
+- tapOn: "履歴"
+- assertVisible: ".*その31 自販機の新商品について.*7:00まで再生.*"

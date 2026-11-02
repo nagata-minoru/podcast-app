@@ -3,8 +3,13 @@ appId: host.exp.Exponent
 ---
 - runFlow: ../subflows/launch.yaml
 - assertVisible: "続きから再生"
-# エピソード行は押せる1つの要素として、タイトルと補足をまとめて読み上げるため、部分一致で探す
-- assertVisible: ".*第18回 卵はなぜ固まるのか.*"
+# 続きから再生のカードは、番組名・エピソード名・残り時間をまとめて読み上げる
+- assertVisible: "台所サイエンス、第18回 卵はなぜ固まるのか、残り26分"
 - assertVisible: "あなたのトップ番組"
-# 番組行は押せる1つの要素として、番組名と補足をまとめて読み上げるため、部分一致で探す
-- assertVisible: ".*朝の余白ラジオ.*"
+# トップ番組のカードは、番組名と分類をまとめて読み上げる
+- assertVisible: "台所サイエンス、科学"
+# カードの再生ボタンで、すぐに再生が始まる
+- tapOn: "第18回 卵はなぜ固まるのかを再生"
+- assertVisible:
+    id: "mini-player"
+- assertVisible: "第18回 卵はなぜ固まるのかを一時停止"
