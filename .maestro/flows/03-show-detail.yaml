@@ -6,11 +6,12 @@ appId: host.exp.Exponent
 # 番組行は頭文字・番組名・補足をまとめた1つの要素になるため、部分一致で探す
 - tapOn: ".*台所サイエンス.*"
 - assertVisible: "ことこと研究会"
-- assertVisible: "第18回 卵はなぜ固まるのか"
-- assertVisible: "第17回 だしのうま味の正体"
+# エピソード行も1つの要素になるため、部分一致で探す
+- assertVisible: ".*第18回 卵はなぜ固まるのか.*"
+- assertVisible: ".*第17回 だしのうま味の正体.*"
 # ヘッダー左上の戻るボタンは前の画面名を出すため、下部タブと同じ名前になる。番組名より上にある方を押す
 - tapOn:
     text: "新着・おすすめ"
     above: "ことこと研究会"
 - assertVisible: "新着エピソード"
-- assertNotVisible: "第17回 だしのうま味の正体"
+- assertNotVisible: ".*第17回 だしのうま味の正体.*"

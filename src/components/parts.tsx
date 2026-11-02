@@ -3,6 +3,7 @@ import type { ReactNode } from 'react'
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native'
 
 import { formatDate, formatDuration } from '@/format'
+import { usePlayer } from '@/player/PlayerProvider'
 import { MIN_TAP, usePalette } from '@/theme'
 import type { Episode, Show, TabName } from '@/types'
 
@@ -70,21 +71,30 @@ export const ShowRow = ({ show, tab, note }: { show: Show, tab: TabName, note?: 
 }
 
 /**
- * エピソードの行。再生は手順2（再生まわり）で PlayerProvider とつなぐ。
+ * エピソードの行。タップすると再生を始め、ミニプレイヤーを出す（再生画面は開かない）。
+ * 再生中・一時停止中の回は、色だけでなく記号と文字でも示す。
  * @param props.episode エピソード
  * @param props.status 再生状況の文字列（例: 「未再生」「残り12分」）
  * @returns エピソード行
  */
 export const EpisodeRow = ({ episode, status }: { episode: Episode, status?: string }) => {
   const c = usePalette()
+  const player = usePlayer()
+  const current = player.episode?.id === episode.id && player.status !== 'idle'
   const meta = `${formatDate(episode.publishedAt)}・${formatDuration(episode.duration)}`
+  const nowPlaying = player.status === 'playing' ? '▶ 再生中' : '❚❚ 一時停止中'
   return (
-    <View style={styles.row}>
+    <Pressable
+      accessibilityRole="button"
+      accessibilityHint={current ? undefined : '再生を始めます'}
+      onPress={() => player.play(episode)}
+      style={styles.row}>
       <View style={styles.rowBody}>
         <Text style={[styles.rowTitle, { color: c.text }]}>{episode.title}</Text>
         <Text style={[styles.rowSub, { color: c.subText }]}>{status ? `${meta}・${status}` : meta}</Text>
+        {current && <Text style={[styles.rowSub, { color: c.text, fontWeight: '700' }]}>{nowPlaying}</Text>}
       </View>
-    </View>
+    </Pressable>
   )
 }
 
