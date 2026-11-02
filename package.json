@@ -14,9 +14,14 @@
     "react-native-screens": "~4.30.1"
   },
   "devDependencies": {
+    "@react-native/jest-preset": "^0.88.1",
+    "@testing-library/react-native": "^14.1.0",
+    "@types/jest": "30.0.0",
     "@types/react": "~19.3.0",
     "eslint": "^9.0.0",
     "eslint-config-expo": "~58.0.4",
+    "jest": "~30.5.2",
+    "jest-expo": "~58.0.13",
     "typescript": "~6.0.3"
   },
   "scripts": {
@@ -25,8 +30,15 @@
     "ios": "expo start --ios",
     "web": "expo start --web",
     "typecheck": "tsc --noEmit",
-    "lint": "expo lint"
+    "lint": "expo lint",
+    "test": "jest"
   },
   "private": true,
-  "packageManager": "yarn@4.18.1"
+  "packageManager": "yarn@4.18.1",
+  "jest": {
+    "preset": "jest-expo",
+    "moduleNameMapper": {
+      "^@/(.*)$": "<rootDir>/src/$1"
+    }
+  }
 }

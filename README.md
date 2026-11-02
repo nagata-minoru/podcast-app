@@ -25,7 +25,7 @@
 
 確認済みの範囲は次のとおりです。
 
-- 型チェック（`yarn typecheck`）と lint（`yarn lint`）
+- 型チェック（`yarn typecheck`）、lint（`yarn lint`）、テスト（`yarn test`）
 - iOS 向けのバンドル作成（`yarn expo export --platform ios`）
 - `npx expo-doctor` の診断（20項目すべて合格）
 - iOS シミュレータ（iPhone 16、iOS 18.5）の Expo Go で、ホーム、新着・おすすめの番組詳細、ライブラリ、検索、設定が
@@ -61,18 +61,40 @@ Web では起動できません。`react-native-web` と `react-dom` が入っ�
 | `yarn expo start` | 開発サーバーを起動する |
 | `yarn typecheck` | 型チェック（`tsc --noEmit`）を行う |
 | `yarn lint` | ESLint（`eslint-config-expo`）で検査する（`expo lint` を実行） |
+| `yarn test` | テスト（Jest）を実行する。`yarn test --watch` で変更のたびに実行する |
 | `yarn expo install <パッケージ>` | SDK に合うバージョンでパッケージを追加する。`yarn add <パッケージ>` は使わない |
 | `npx expo-doctor` | 依存関係と設定の問題を調べる（expo-doctor は依存に含めていないため `npx` で実行する） |
 
 npm は使いません。`package-lock.json` を作らないよう、`npm install` は実行しないでください。
 バンドラーは Expo 標準の Metro を使います。Expo Router が Metro を前提にしているため、Vite は使いません。
+## テスト
+
+Jest（`jest-expo`）と React Native Testing Library を使います。テストは `src/__tests__/` に置きます。
+`src/app/` に置くと画面として扱われるため、そこには置きません。
+
+| ファイル | 内容 |
+| --- | --- |
+| `format.test.ts` | 時間・日付の表示形式 |
+| `mock.test.ts` | 架空データの整合性（存在しない ID を指していないかなど）と検索用の関数 |
+| `Segmented.test.tsx` | 切り替えボタンの選択状態と、押したときの動き |
+| `navigation.test.tsx` | 実際の画面フォルダを使った画面遷移（起動時のホーム、タブ切替、番組詳細、設定） |
+
+画面遷移のテストは `expo-router/testing-library` の `renderRouter` で、シミュレータなしに動かします。
+
+## CI
+
+GitHub Actions（`.github/workflows/ci.yml`）で、`main` への push と pull request のたびに、
+型チェック、lint、テストを実行します。Node.js 24 と、corepack で有効にした Yarn 4 を使います。
+
 ## ディレクトリ構成
 
 ```text
 mobile/
+  .github/workflows/ci.yml  # CI（型チェック、lint、テスト）
   app.json                  # アプリ名、scheme、プラグインなどの設定
   eslint.config.js          # ESLint の設定（eslint-config-expo）
   src/
+    __tests__/              # テスト
     app/                    # 画面（Expo Router）。ここに置いたファイルがそのまま画面になる
       _layout.tsx           # アプリ全体の画面スタック（4タブ、再生画面、設定）
       index.tsx             # 起動時にホームタブへリダイレクト
