@@ -1,5 +1,5 @@
 import { useUndoToast } from '@/components/UndoToast'
-import { episodesOfShow } from '@/data/mock'
+import { episodesOfShow } from '@/data/catalog'
 import { useLibrary } from '@/library/LibraryProvider'
 import { usePlayer } from '@/player/PlayerProvider'
 import type { Show } from '@/types'

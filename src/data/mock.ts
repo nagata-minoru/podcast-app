@@ -60,25 +60,3 @@ export const features: Feature[] = [{
 }]
 
 export const showPreferences: ShowPreference[] = []
-
-/**
- * ID から番組を探す。
- * @param id 番組 ID
- * @returns 番組。見つからなければ undefined
- */
-export const findShow = (id: string) => shows.find((s) => s.id === id)
-
-/**
- * ID からエピソードを探す。
- * @param id エピソード ID
- * @returns エピソード。見つからなければ undefined
- */
-export const findEpisode = (id: string) => episodes.find((e) => e.id === id)
-
-/**
- * 番組のエピソードを新しい順に返す。
- * @param showId 番組 ID
- * @returns 公開日の新しい順に並べたエピソード
- */
-export const episodesOfShow = (showId: string) =>
-  episodes.filter((e) => e.showId === showId).sort((a, b) => b.publishedAt.localeCompare(a.publishedAt))

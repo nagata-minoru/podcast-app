@@ -1,0 +1,51 @@
+# RSS の URL で番組を追加して聴く。架空の番組のフィードは scripts/e2e.sh が起動するローカルサーバー（ポート 8090）が配る
+# 誤った URL では理由を出してとどまり、正しい URL では番組詳細に置き換わってフォロー中になること、
+# 長さのない回は読み込むと実際の長さになること、音声のない回は「音声なし」と示すこと、戻ると検索に戻ることを確かめる
+appId: host.exp.Exponent
+---
+- runFlow: ../subflows/launch.yaml
+- tapOn: "検索"
+- tapOn: "＋ RSS の URL で追加"
+- tapOn: "RSS フィードの URL"
+- inputText: "http://127.0.0.1:8090/missing.xml"
+- tapOn: "追加"
+- extendedWaitUntil:
+    visible: ".*フィードを取得できませんでした.*"
+    timeout: 15000
+# 誤った URL のまま戻ると検索に戻る。開き直すと入力欄は空になる
+- tapOn:
+    text: "検索"
+    above: "RSS の URL で追加"
+- assertVisible: "人気のテーマ"
+- tapOn: "＋ RSS の URL で追加"
+- tapOn: "RSS フィードの URL"
+- inputText: "http://127.0.0.1:8090/feed.xml"
+- tapOn: "追加"
+- extendedWaitUntil:
+    visible: "試し聴きラジオ"
+    timeout: 15000
+# フォローボタンは「〇〇をフォロー」と読み上げ、状態は「checked」などの値で示す
+- assertVisible: "試し聴きラジオをフォロー"
+- assertVisible:
+    text: "checked"
+    below: "試し聴きラジオ"
+- assertVisible: "エピソード（3本）"
+- scrollUntilVisible:
+    element: ".*第1回 音声の準備中.*音声なし.*"
+- assertVisible: ".*第2回 長さが書いていない回.*長さ不明.*"
+# 長さのない回を再生すると、読み込んだ音声の長さ（1分24秒）になる
+- tapOn: "第2回 長さが書いていない回を再生"
+- assertVisible:
+    id: "mini-player"
+- extendedWaitUntil:
+    visible: ".*第2回 長さが書いていない回.*10月2[67]日・1分.*"
+    timeout: 15000
+- tapOn: "第2回 長さが書いていない回を一時停止"
+# 番組詳細から戻ると、追加画面ではなく検索に戻る。戻るボタンは前の画面名（下部タブと同じ名前）なので、番組名より上を押す
+- scrollUntilVisible:
+    element: "試し聴きラジオ"
+    direction: UP
+- tapOn:
+    text: "検索"
+    above: "試し聴きラジオ"
+- assertVisible: "人気のテーマ"

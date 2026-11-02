@@ -22,6 +22,7 @@ export type PlayerState = {
 /**
  * 再生状態を変える操作。at は操作した日時（ISO 8601）で、再生位置の記録の更新日時に使う。
  * sync は音声の実際の再生位置を、finish は音声が最後まで鳴ったことを、fail は音声を読み込めなかったことを知らせる。
+ * loaded は読み込んだ音声の実際の長さ（秒）を知らせる。
  */
 export type PlayerAction =
   | { type: 'play', episode: Episode, rate: number, at: string }
@@ -32,6 +33,7 @@ export type PlayerAction =
   | { type: 'sync', position: number, at: string }
   | { type: 'finish', at: string }
   | { type: 'fail' }
+  | { type: 'loaded', duration: number }
   | { type: 'close', at: string }
   | { type: 'forget', episodeIds: string[] }
 
@@ -84,14 +86,15 @@ const record = (state: PlayerState, position: number, completed: boolean, at: st
 }
 
 /**
- * 再生位置を動かす。最後まで進んだら再生済みとして記録し、idle に戻す。
+ * 再生位置を動かす。最後まで進んだら再生済みとして記録し、idle に戻す。長さがわからないうちは動かさない。
  * @param state 現在の状態
  * @param position 新しい再生位置（秒）
  * @param at 操作した日時
  * @returns 新しい状態
  */
 const moveTo = (state: PlayerState, position: number, at: string): PlayerState => {
-  if (state.status === 'idle') return state
+  // 長さがわからないうちは、最後まで進んだと誤らないよう位置を動かさない
+  if (state.status === 'idle' || state.duration <= 0) return state
   const next = clamp(position, state.duration)
   if (next >= state.duration) return idleState(record(state, state.duration, true, at))
   return { ...state, position: next, progress: record(state, next, false, at) }
@@ -108,11 +111,27 @@ const play = (state: PlayerState, action: Extract<PlayerAction, { type: 'play' }
   const { episode, rate, at } = action
   if (state.episode?.id === episode.id && state.status !== 'idle') return { ...state, status: 'playing', failed: false }
   const saved = state.progress[episode.id]
-  const position = saved && !saved.completed ? clamp(saved.position, episode.duration) : 0
+  const resume = saved && !saved.completed ? Math.max(saved.position, 0) : 0
+  // 長さがわからない回は、読み込んで長さがわかるまで記録の位置をそのまま使う
+  const position = episode.duration > 0 ? clamp(resume, episode.duration) : resume
   const base: PlayerState = {
     episode, status: 'playing', duration: episode.duration, position, rate, progress: {}, failed: false,
   }
   return { ...base, progress: record({ ...base, progress: state.progress }, position, false, at) }
+}
+
+/**
+ * 読み込んだ音声の実際の長さを、再生中の回に反映する。秒未満は切り捨てる。
+ * @param state 現在の状態
+ * @param seconds 実際の長さ（秒）
+ * @returns 新しい状態。長さが変わらないか、再生していなければ元の状態
+ */
+const withDuration = (state: PlayerState, seconds: number): PlayerState => {
+  const duration = Math.floor(seconds)
+  if (state.status === 'idle' || !state.episode || duration <= 0 || duration === state.duration) return state
+  return {
+    ...state, duration, position: clamp(state.position, duration), episode: { ...state.episode, duration },
+  }
 }
 
 /**
@@ -155,6 +174,8 @@ export const playerReducer = (state: PlayerState, action: PlayerAction): PlayerS
     case 'fail':
       if (state.status === 'idle') return state
       return { ...state, status: 'paused', failed: true }
+    case 'loaded':
+      return withDuration(state, action.duration)
     case 'close':
       if (state.status === 'idle') return state
       return idleState(record(state, state.position, false, action.at))

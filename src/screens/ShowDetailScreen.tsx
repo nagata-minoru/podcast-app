@@ -10,7 +10,7 @@ import { Sheet } from '@/components/Sheet'
 import { ShowEpisodeRow } from '@/components/ShowEpisodeRow'
 import { EpisodeMenuItems, ShowMoreItems, ShowRateChoices } from '@/components/ShowSheets'
 import { playStateOf } from '@/data/derive'
-import { episodesOfShow, findShow } from '@/data/mock'
+import { episodesOfShow, findShow, useCatalog } from '@/data/catalog'
 import { useLibrary } from '@/library/LibraryProvider'
 import { useShowActions } from '@/library/useShowActions'
 import { usePlayer } from '@/player/PlayerProvider'
@@ -66,7 +66,7 @@ const Overview = ({ show }: { show: Show }) => {
         style={styles.more}>
         <Text style={{ color: c.text, textDecorationLine: 'underline' }}>{expanded ? '閉じる' : 'もっと見る'}</Text>
       </Pressable>
-      <Text style={{ color: c.subText }}>{`${show.category}・${show.updateFrequency}`}</Text>
+      <Text style={{ color: c.subText }}>{[show.category, show.updateFrequency].filter(Boolean).join('・')}</Text>
       {rate !== undefined && <Text style={{ color: c.subText }}>{`この番組の再生速度: ${formatRate(rate)}`}</Text>}
     </View>
   )
@@ -112,6 +112,7 @@ const Episodes = ({ show, onMenu }: { show: Show, onMenu: (episode: Episode) => 
   const { savedEpisodeIds } = useLibrary()
   const [filter, setFilter] = useState<Filter>('すべて')
   const [query, setQuery] = useState('')
+  useCatalog()
   const all = episodesOfShow(show.id)
   const resuming = all.filter((e) => playStateOf(progress[e.id]) === 'inProgress')
   const list = filterEpisodes(all, filter, query, progress, savedEpisodeIds)
@@ -145,6 +146,7 @@ const Episodes = ({ show, onMenu }: { show: Show, onMenu: (episode: Episode) => 
 const ShowDetailScreen = () => {
   const c = usePalette()
   const { id } = useLocalSearchParams<{ id: string }>()
+  useCatalog()
   const show = findShow(id)
   const actions = useShowActions(show)
   const [sheet, setSheet] = useState<SheetState>(null)
@@ -209,7 +211,7 @@ const ShowDetailScreen = () => {
         <Episodes show={show} onMenu={(episode) => setSheet({ kind: 'episode', episode })} />
         <SectionTitle title="この番組について" />
         <Text style={{ color: c.subText }}>{`配信者: ${show.publisher}`}</Text>
-        <Text style={{ color: c.subText }}>{`更新: ${show.updateFrequency}`}</Text>
+        {show.updateFrequency && <Text style={{ color: c.subText }}>{`更新: ${show.updateFrequency}`}</Text>}
         {/* 通知を重ねても最後の行が隠れないよう、下に余白を取る */}
         <View style={{ height: 72 }} />
       </Screen>

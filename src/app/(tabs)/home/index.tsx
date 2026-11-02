@@ -3,6 +3,7 @@ import { Pressable, Text } from 'react-native'
 
 import { ContinueCard, Shelf, ShowCard } from '@/components/cards'
 import { Empty, Screen, SectionTitle } from '@/components/parts'
+import { useCatalog } from '@/data/catalog'
 import { inProgress, topShowsByHistory } from '@/data/derive'
 import { useIsHidden } from '@/library/LibraryProvider'
 import { usePlayer } from '@/player/PlayerProvider'
@@ -33,6 +34,8 @@ const ProfileButton = () => {
 const Home = () => {
   const { history } = usePlayer()
   const isHidden = useIsHidden()
+  // フィードから取り込んだ番組の回も出すため、カタログの変更で描き直す
+  useCatalog()
   const continues = inProgress(history).filter(({ episode }) => !isHidden(episode.showId))
   // 非表示にした番組の回を聴いても、トップ番組には再登場させない
   const top = topShowsByHistory(history).filter((s) => !isHidden(s.id))

@@ -1,4 +1,4 @@
-import { episodes, findEpisode, shows } from '@/data/mock'
+import { findEpisode, getCatalog } from '@/data/catalog'
 import { formatDuration } from '@/format'
 import type { Episode, Progress, Show } from '@/types'
 
@@ -32,7 +32,7 @@ export const topShowsByHistory = (history: Progress[]): Show[] => {
   const counts = new Map<string, number>()
   withEpisodes(history).forEach(({ episode }) => counts.set(episode.showId, (counts.get(episode.showId) ?? 0) + 1))
   const order = [...counts.keys()]
-  return shows
+  return getCatalog().shows
     .filter((s) => counts.has(s.id))
     .sort((a, b) => (counts.get(b.id) ?? 0) - (counts.get(a.id) ?? 0) || order.indexOf(a.id) - order.indexOf(b.id))
 }
@@ -44,7 +44,7 @@ export const topShowsByHistory = (history: Progress[]): Show[] => {
  * @returns 未再生の本数
  */
 export const unplayedCount = (showId: string, progress: Record<string, Progress>) =>
-  episodes.filter((e) => e.showId === showId && !progress[e.id]).length
+  getCatalog().episodes.filter((e) => e.showId === showId && !progress[e.id]).length
 
 /** エピソードの再生状況。番組詳細の行と絞り込みに使う */
 export type PlayState = 'unplayed' | 'inProgress' | 'completed'

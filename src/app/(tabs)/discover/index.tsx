@@ -12,7 +12,7 @@ import { useIsHidden } from '@/library/LibraryProvider'
  */
 const Discover = () => {
   const isHidden = useIsHidden()
-  const popular = shows.filter((s) => !isHidden(s.id)).sort((a, b) => a.popularityRank - b.popularityRank)
+  const popular = shows.filter((s) => !isHidden(s.id)).sort((a, b) => (a.popularityRank ?? Infinity) - (b.popularityRank ?? Infinity))
   const latest = episodes
     .filter((e) => !isHidden(e.showId))
     .sort((a, b) => b.publishedAt.localeCompare(a.publishedAt))

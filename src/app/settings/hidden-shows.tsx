@@ -1,7 +1,7 @@
 import { AccessibilityInfo, Pressable, StyleSheet, Text, View } from 'react-native'
 
 import { Artwork, Screen } from '@/components/parts'
-import { findShow } from '@/data/mock'
+import { findShow, useCatalog } from '@/data/catalog'
 import { useLibrary } from '@/library/LibraryProvider'
 import { MIN_TAP, usePalette } from '@/theme'
 import type { Show } from '@/types'
@@ -13,6 +13,7 @@ import type { Show } from '@/types'
 const HiddenShows = () => {
   const c = usePalette()
   const { hiddenShowIds, unhide } = useLibrary()
+  useCatalog()
   const hidden = hiddenShowIds.map(findShow).filter((s): s is Show => !!s)
 
   /**
