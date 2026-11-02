@@ -36,6 +36,8 @@ export type PlayerAction =
   | { type: 'loaded', duration: number }
   | { type: 'close', at: string }
   | { type: 'forget', episodeIds: string[] }
+  /** 再生をやめ、再生位置の記録を入れ替える（保存を消したとき） */
+  | { type: 'reset', progress: Progress[] }
 
 /** 戻る秒数 */
 export const SKIP_BACK = 15
@@ -181,6 +183,8 @@ export const playerReducer = (state: PlayerState, action: PlayerAction): PlayerS
       return idleState(record(state, state.position, false, action.at))
     case 'forget':
       return { ...state, progress: forget(state.progress, action.episodeIds) }
+    case 'reset':
+      return initialPlayerState(action.progress)
   }
 }
 

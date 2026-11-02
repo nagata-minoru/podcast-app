@@ -1,7 +1,8 @@
-import { createContext, type ReactNode, useContext, useEffect, useMemo, useState } from 'react'
+import { createContext, type ReactNode, useContext, useEffect, useMemo } from 'react'
 import { Appearance } from 'react-native'
 
 import { DEFAULT_RATE } from '@/player/playerState'
+import { useStoredState } from '@/storage/useStoredState'
 
 /** テーマの選び方。system は端末の外観設定に合わせる */
 export type ThemeChoice = 'system' | 'light' | 'dark'
@@ -18,20 +19,20 @@ export type Settings = {
 const SettingsContext = createContext<Settings | null>(null)
 
 /**
- * アプリ内の設定を共有する。値はアプリを終了すると元に戻る（保存の仕組みは未設計）。
+ * アプリ内の設定を共有する。値は端末に保存する。
  * テーマは Appearance.setColorScheme でアプリだけの外観を切り替える。OS の設定は変えない。
  * @param props.children 配下の画面
  * @returns Provider 要素
  */
 export const SettingsProvider = ({ children }: { children: ReactNode }) => {
-  const [rate, setRate] = useState(DEFAULT_RATE)
-  const [theme, setTheme] = useState<ThemeChoice>('system')
+  const [rate, setRate] = useStoredState('rate', DEFAULT_RATE)
+  const [theme, setTheme] = useStoredState<ThemeChoice>('theme', 'system')
 
   useEffect(() => {
     Appearance.setColorScheme(theme === 'system' ? 'auto' : theme)
   }, [theme])
 
-  const value = useMemo(() => ({ rate, theme, setRate, setTheme }), [rate, theme])
+  const value = useMemo(() => ({ rate, theme, setRate, setTheme }), [rate, theme, setRate, setTheme])
   return <SettingsContext.Provider value={value}>{children}</SettingsContext.Provider>
 }
 

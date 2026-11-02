@@ -1,4 +1,7 @@
 # Expo Go を止めてから開発サーバーの URL で開き直し、毎回ホームから始める
+# 開いたあと、端末に保存したものを消す入口（/dev-reset。開発中だけ使える）を開き、毎回架空のデータの状態から始める
+# Expo Go は、止めた状態から開くと URL のパスを使わず、開いているときに入口の URL を受けるとアプリを読み込み直す。
+# そのため、一度開いてから入口を開き、読み込み直したあとに出るボタンを押す
 # 開発サーバー（yarn expo start）がポート 8081 で動いている必要がある
 appId: host.exp.Exponent
 ---
@@ -11,3 +14,8 @@ appId: host.exp.Exponent
 - extendedWaitUntil:
     visible: "続きから再生"
     timeout: 60000
+- openLink: exp://127.0.0.1:8081/--/dev-reset
+- tapOn: "保存を消してホームを開く"
+- extendedWaitUntil:
+    visible: "続きから再生"
+    timeout: 15000
