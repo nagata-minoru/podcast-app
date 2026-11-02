@@ -1,0 +1,49 @@
+# 通しの確認。再生を始めてから4タブを巡り、どのタブでもミニプレイヤーが残ること、
+# ミニプレイヤーから再生画面を開いて閉じると同じタブに戻ること、タブごとの画面履歴が保たれることを確かめる
+appId: host.exp.Exponent
+---
+- runFlow: ../subflows/launch.yaml
+- tapOn: "第18回 卵はなぜ固まるのかを再生"
+- assertVisible:
+    id: "mini-player"
+- assertVisible: "一時停止"
+# タブを切り替えても、ミニプレイヤーと再生状態は残る
+- tapOn: "新着・おすすめ"
+- assertVisible: "新着エピソード"
+- assertVisible:
+    id: "mini-player"
+- tapOn: "ライブラリ"
+- assertVisible: "登録済み"
+- assertVisible:
+    id: "mini-player"
+- tapOn: "検索"
+- assertVisible: "人気のテーマ"
+- assertVisible:
+    id: "mini-player"
+- assertVisible: "一時停止"
+# ミニプレイヤーから再生画面を開き、閉じると検索タブに戻る。再生は止めない
+- tapOn: "第18回 卵はなぜ固まるのか"
+- assertVisible: "30秒進む"
+- tapOn: "再生画面を閉じる"
+- assertVisible: "人気のテーマ"
+- assertVisible: "一時停止"
+# ミニプレイヤーで一時停止しても、ミニプレイヤーは残る
+- tapOn: "一時停止"
+- assertVisible: "再生"
+- assertVisible:
+    id: "mini-player"
+# ミニプレイヤーの番組名から、検索タブの中で番組詳細を開く
+- tapOn: "台所サイエンス"
+- assertVisible: "ことこと研究会"
+# ほかのタブへ移って戻っても、検索タブは番組詳細のまま
+- tapOn: "ホーム"
+- assertVisible: "続きから再生"
+- tapOn: "検索"
+- assertVisible: "ことこと研究会"
+# ヘッダーの戻るボタンは前の画面名（下部タブと同じ名前）になるため、番組名より上を押す
+- tapOn:
+    text: "検索"
+    above: "ことこと研究会"
+- assertVisible: "人気のテーマ"
+- assertVisible:
+    id: "mini-player"
