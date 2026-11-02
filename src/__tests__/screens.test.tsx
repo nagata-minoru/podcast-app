@@ -11,8 +11,8 @@ describe('主要画面', () => {
 
   it('ホームの続きから再生は、残り時間を出し、再生ボタンですぐ再生と一時停止ができる', async () => {
     await renderRouter(APP_DIR, { initialUrl: '/home' })
-    // e3 は 2172秒のうち 600秒まで聴いた回
-    expect(screen.getByText('残り26分')).toBeOnTheScreen()
+    // e3 は 112秒のうち 40秒まで聴いた回
+    expect(screen.getByText('残り1分')).toBeOnTheScreen()
     await fireEvent.press(screen.getByLabelText('第18回 卵はなぜ固まるのかを再生'))
     expect(screen.getByTestId('mini-player')).toBeOnTheScreen()
     await fireEvent.press(screen.getByLabelText('第18回 卵はなぜ固まるのかを一時停止'))

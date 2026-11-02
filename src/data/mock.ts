@@ -1,6 +1,7 @@
 import type { Episode, Feature, Library, Progress, Show, ShowPreference } from '@/types'
 
 // すべて架空のデータ。実在する番組名・配信者名は使わない。
+// 再生時間（秒）は、同梱の音声（src/data/audio.ts）の長さに合わせている。
 
 export const shows: Show[] = [{
   id: 's1', title: '朝の余白ラジオ', publisher: '余白制作室',
@@ -22,30 +23,30 @@ export const shows: Show[] = [{
 
 export const episodes: Episode[] = [{
   id: 'e1', showId: 's1', title: '#42 雨の日の通勤を楽しくする方法', summary: '傘と音楽と寄り道の話。',
-  publishedAt: '2026-10-29', duration: 1820,
+  publishedAt: '2026-10-29', duration: 84,
 }, {
   id: 'e2', showId: 's1', title: '#41 秋の新しい習慣', summary: '朝の散歩を始めて3週間。',
-  publishedAt: '2026-10-26', duration: 1640,
+  publishedAt: '2026-10-26', duration: 67,
 }, {
   id: 'e3', showId: 's2', title: '第18回 卵はなぜ固まるのか', summary: 'たんぱく質の変性を目玉焼きで。',
-  publishedAt: '2026-10-28', duration: 2172,
+  publishedAt: '2026-10-28', duration: 112,
 }, {
   id: 'e4', showId: 's2', title: '第17回 だしのうま味の正体', summary: 'グルタミン酸とイノシン酸の相乗効果。',
-  publishedAt: '2026-10-21', duration: 2010,
+  publishedAt: '2026-10-21', duration: 67,
 }, {
   id: 'e5', showId: 's3', title: '第9回 はじめての決算', summary: '数字が合わない夜の話。',
-  publishedAt: '2026-10-24', duration: 2700,
+  publishedAt: '2026-10-24', duration: 87,
 }, {
   id: 'e6', showId: 's4', title: 'その31 自販機の新商品について', summary: '30分かけて結論が出ない。',
-  publishedAt: '2026-10-30', duration: 3120,
+  publishedAt: '2026-10-30', duration: 86,
 }]
 
 export const progresses: Progress[] = [{
-  episodeId: 'e3', position: 600, completed: false, updatedAt: '2026-11-01T21:10:00+09:00',
+  episodeId: 'e3', position: 40, completed: false, updatedAt: '2026-11-01T21:10:00+09:00',
 }, {
-  episodeId: 'e2', position: 1640, completed: true, updatedAt: '2026-10-30T07:40:00+09:00',
+  episodeId: 'e2', position: 67, completed: true, updatedAt: '2026-10-30T07:40:00+09:00',
 }, {
-  episodeId: 'e6', position: 420, completed: false, updatedAt: '2026-10-31T23:55:00+09:00',
+  episodeId: 'e6', position: 50, completed: false, updatedAt: '2026-10-31T23:55:00+09:00',
 }]
 
 export const library: Library = {

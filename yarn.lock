@@ -5217,6 +5217,18 @@ __metadata:
   languageName: node
   linkType: hard
 
+"expo-audio@npm:~58.0.11":
+  version: 58.0.11
+  resolution: "expo-audio@npm:58.0.11"
+  peerDependencies:
+    expo: "*"
+    expo-asset: "*"
+    react: "*"
+    react-native: "*"
+  checksum: 10c0/5f0e415875ef85b7a8928cb9e15bb3d61383355a2f578c2157c43d2d867a81a526f550816ad422fdb7fa7910e76cde4b2d2281181253b85e25f049812affb640
+  languageName: node
+  linkType: hard
+
 "expo-constants@npm:~58.0.14":
   version: 58.0.14
   resolution: "expo-constants@npm:58.0.14"
@@ -8781,6 +8793,7 @@ __metadata:
     eslint: "npm:^9.0.0"
     eslint-config-expo: "npm:~58.0.4"
     expo: "npm:~58.0.22"
+    expo-audio: "npm:~58.0.11"
     expo-constants: "npm:~58.0.14"
     expo-linking: "npm:~58.0.15"
     expo-router: "npm:~58.0.29"

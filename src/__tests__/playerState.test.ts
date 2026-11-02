@@ -21,24 +21,24 @@ const playing = (position = 0, rate = 1): PlayerState => {
 
 describe('playerReducer', () => {
   it('play で再生中になり、再生時間と速度を受け取る', () => {
-    const s = playing(100, 1.5)
-    expect(s).toMatchObject({ status: 'playing', position: 100, duration: episode.duration, rate: 1.5 })
+    const s = playing(50, 1.5)
+    expect(s).toMatchObject({ status: 'playing', position: 50, duration: episode.duration, rate: 1.5 })
   })
 
   it('途中まで聴いた回は記録の位置から、再生済みの回は最初から始める', () => {
     const progress: Progress[] = [{
-      episodeId: episode.id, position: 300, completed: false, updatedAt: AT,
+      episodeId: episode.id, position: 30, completed: false, updatedAt: AT,
     }]
     const resumed = playerReducer(initialPlayerState(progress), { type: 'play', episode, rate: 1, at: LATER })
-    expect(resumed.position).toBe(300)
+    expect(resumed.position).toBe(30)
     const done = initialPlayerState([{ ...progress[0], completed: true }])
     expect(playerReducer(done, { type: 'play', episode, rate: 1, at: LATER }).position).toBe(0)
   })
 
   it('再生中の回を選び直しても位置を戻さない', () => {
-    const paused = playerReducer(playing(300), { type: 'toggle', at: AT })
+    const paused = playerReducer(playing(30), { type: 'toggle', at: AT })
     const s = playerReducer(paused, { type: 'play', episode, rate: 1, at: AT })
-    expect(s).toMatchObject({ status: 'playing', position: 300 })
+    expect(s).toMatchObject({ status: 'playing', position: 30 })
   })
 
   it('toggle で再生と一時停止を切り替え、idle では何もしない', () => {
@@ -63,15 +63,34 @@ describe('playerReducer', () => {
     const s = playerReducer(playing(episode.duration - 10), { type: 'seek', delta: 30, at: LATER })
     expect(s).toMatchObject({ status: 'idle', episode: null })
     expect(s.progress[episode.id]).toMatchObject({ position: episode.duration, completed: true })
-    const t = playerReducer(playing(episode.duration - 1), { type: 'tick', seconds: 1, at: LATER })
+    // 音声の位置が再生時間に届いたときも同じ
+    const near = playing(episode.duration - 1)
+    const t = playerReducer(near, { type: 'sync', position: episode.duration + 0.3, at: LATER })
     expect(t.status).toBe('idle')
     expect(t.progress[episode.id].completed).toBe(true)
   })
 
-  it('tick は再生中だけ、速度の分だけ位置を進める', () => {
-    expect(playerReducer(playing(0, 1.5), { type: 'tick', seconds: 1, at: AT }).position).toBe(1.5)
+  it('sync は再生中だけ、音声の実際の位置を受け取る', () => {
+    expect(playerReducer(playing(10), { type: 'sync', position: 12.5, at: AT }).position).toBe(12.5)
     const paused = playerReducer(playing(5), { type: 'toggle', at: AT })
-    expect(playerReducer(paused, { type: 'tick', seconds: 1, at: AT })).toBe(paused)
+    expect(playerReducer(paused, { type: 'sync', position: 8, at: AT })).toBe(paused)
+  })
+
+  it('finish で再生済みとして記録し、idle に戻る（音声が再生時間より先に終わったとき）', () => {
+    const s = playerReducer(playing(episode.duration - 2), { type: 'finish', at: LATER })
+    expect(s).toMatchObject({ status: 'idle', episode: null })
+    expect(s.progress[episode.id]).toMatchObject({ position: episode.duration, completed: true, updatedAt: LATER })
+    const idle = idleState()
+    expect(playerReducer(idle, { type: 'finish', at: AT })).toBe(idle)
+  })
+
+  it('fail で一時停止にし、再生し直すと失敗の印を消す', () => {
+    const failed = playerReducer(playing(10), { type: 'fail' })
+    expect(failed).toMatchObject({ status: 'paused', failed: true, position: 10 })
+    expect(playerReducer(failed, { type: 'toggle', at: AT })).toMatchObject({ status: 'playing', failed: false })
+    expect(playerReducer(failed, { type: 'play', episode, rate: 1, at: AT }).failed).toBe(false)
+    const idle = idleState()
+    expect(playerReducer(idle, { type: 'fail' })).toBe(idle)
   })
 
   it('forget は指定の回の記録だけを消す', () => {
@@ -84,9 +103,9 @@ describe('playerReducer', () => {
   })
 
   it('close で idle に戻り、閉じた位置を記録に残す', () => {
-    const s = playerReducer(playing(120), { type: 'close', at: LATER })
+    const s = playerReducer(playing(60), { type: 'close', at: LATER })
     expect(s).toMatchObject({ status: 'idle', episode: null })
-    expect(s.progress[episode.id]).toMatchObject({ position: 120, completed: false, updatedAt: LATER })
+    expect(s.progress[episode.id]).toMatchObject({ position: 60, completed: false, updatedAt: LATER })
   })
 })
 
