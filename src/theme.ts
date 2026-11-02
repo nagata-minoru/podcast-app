@@ -31,6 +31,9 @@ const dark: Palette = {
   border: '#34343C',
 }
 
+/** ライト・ダークの色の組。テストでコントラスト比を確かめるために公開する */
+export const palettes = { light, dark }
+
 /** 主要操作のタップ領域の最小サイズ（iOS 44pt を基準にする） */
 export const MIN_TAP = 44
 
