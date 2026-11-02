@@ -1,4 +1,4 @@
-import { formatDate, formatDuration } from '@/format'
+import { formatClock, formatDate, formatDuration, formatSpokenClock } from '@/format'
 
 describe('formatDuration', () => {
   it('60分未満は分だけで表す', () => {
@@ -23,5 +23,24 @@ describe('formatDate', () => {
 
   it('時刻とタイムゾーンは無視し、先頭の日付を使う', () => {
     expect(formatDate('2026-01-05T23:55:00+09:00')).toBe('1月5日')
+  })
+})
+
+describe('formatClock', () => {
+  it('1時間未満は分:秒で表す', () => {
+    expect(formatClock(723)).toBe('12:03')
+    expect(formatClock(5.9)).toBe('0:05')
+  })
+
+  it('1時間以上は時:分:秒で表し、負の値は0にする', () => {
+    expect(formatClock(3725)).toBe('1:02:05')
+    expect(formatClock(-3)).toBe('0:00')
+  })
+})
+
+describe('formatSpokenClock', () => {
+  it('読み上げ用に時間・分・秒で表す', () => {
+    expect(formatSpokenClock(723)).toBe('12分3秒')
+    expect(formatSpokenClock(3725)).toBe('1時間2分5秒')
   })
 })

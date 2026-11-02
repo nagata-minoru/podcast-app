@@ -1,0 +1,22 @@
+# エピソード行で再生を始め、ミニプレイヤーから再生画面を開いて操作し、番組名から番組詳細へ移る
+appId: host.exp.Exponent
+---
+- runFlow: ../subflows/launch.yaml
+- tapOn: "新着・おすすめ"
+# エピソード行はタイトルと補足をまとめた1つの要素になるため、部分一致で探す
+- tapOn: ".*その31 自販機の新商品について.*"
+- assertVisible: "一時停止"
+- tapOn: "一時停止"
+- assertVisible: "再生"
+# タブを切り替えてもミニプレイヤーは残る
+- tapOn: "ライブラリ"
+- assertVisible: "夜ふかし雑談所"
+- tapOn: "その31 自販機の新商品について"
+- assertVisible: "30秒進む"
+- assertVisible: "15秒戻る"
+# 速度のボタンは読み上げ名（「再生速度 1倍」）で探す
+- tapOn: "再生速度 1倍"
+- assertVisible: "再生速度 1.25倍"
+- tapOn: "夜ふかし雑談所 ›"
+- assertVisible: "ねむれない二人"
+- assertVisible: "再生"
