@@ -11,6 +11,7 @@ import { ShowEpisodeRow } from '@/components/ShowEpisodeRow'
 import { EpisodeMenuItems, ShowMoreItems, ShowRateChoices } from '@/components/ShowSheets'
 import { playStateOf } from '@/data/derive'
 import { episodesOfShow, findShow, useCatalog } from '@/data/catalog'
+import { refreshShow, usePullRefresh, useRefreshStatus } from '@/feed/refreshFeeds'
 import { useLibrary } from '@/library/LibraryProvider'
 import { useShowActions } from '@/library/useShowActions'
 import { usePlayer } from '@/player/PlayerProvider'
@@ -101,6 +102,25 @@ const Header = ({ show, hidden, onUnfollow }: { show: Show, hidden: boolean, onU
 }
 
 /**
+ * フィードを取り直している・取り直せなかったことの知らせ。RSS で追加した番組だけ出る。
+ * @param props.showId 番組 ID
+ * @returns 知らせ。何もなければ null
+ */
+const RefreshNote = ({ showId }: { showId: string }) => {
+  const c = usePalette()
+  const status = useRefreshStatus(showId)
+  if (!status) return null
+  if (status.state === 'loading') {
+    return <Text accessibilityLiveRegion="polite" style={{ color: c.subText }}>フィードを更新しています…</Text>
+  }
+  return (
+    <Text accessibilityRole="alert" style={[styles.hidden, { color: c.text, borderColor: c.border }]}>
+      {`⚠ フィードを更新できませんでした。前に読み込んだ内容を表示しています。${status.message}`}
+    </Text>
+  )
+}
+
+/**
  * エピソードの欄。再生途中の欄の下に、絞り込みと番組内検索を通した新しい順の一覧を置く。
  * @param props.show 番組
  * @param props.onMenu エピソードのメニューを開く処理
@@ -141,6 +161,7 @@ const Episodes = ({ show, onMenu }: { show: Show, onMenu: (episode: Episode) => 
 
 /**
  * 番組詳細（補助画面）。各タブの show/[id] から共通で使い、開いたタブの画面履歴に積む。仕様は docs/show-detail.md。
+ * RSS で追加した番組は、下に引っ張るか「⋯」の「フィードを更新」でフィードを取り直す。
  * @returns 番組詳細画面
  */
 const ShowDetailScreen = () => {
@@ -151,6 +172,7 @@ const ShowDetailScreen = () => {
   const actions = useShowActions(show)
   const [sheet, setSheet] = useState<SheetState>(null)
   const close = () => setSheet(null)
+  const pull = usePullRefresh(() => refreshShow(id, { force: true }))
   if (!show) {
     return (
       <Screen>
@@ -187,6 +209,10 @@ const ShowDetailScreen = () => {
         onUnfollow={() => {
           close()
           actions.unfollow()
+        }}
+        onRefresh={() => {
+          close()
+          refreshShow(show.id, { force: true })
         }} />
     )
     return { title: show.title, body: items }
@@ -205,8 +231,9 @@ const ShowDetailScreen = () => {
             </Pressable>
           ),
         }} />
-      <Screen>
+      <Screen {...(show.feedUrl ? pull : {})}>
         <Header show={show} hidden={actions.hidden} onUnfollow={actions.unfollow} />
+        <RefreshNote showId={show.id} />
         <Overview show={show} />
         <Episodes show={show} onMenu={(episode) => setSheet({ kind: 'episode', episode })} />
         <SectionTitle title="この番組について" />

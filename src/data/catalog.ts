@@ -61,6 +61,29 @@ export const addShow = (show: Show, episodes: Episode[]) => {
 }
 
 /**
+ * 取り直したフィードを、前に取り込んだ番組に合わせて入れる。番組 ID は変えない。
+ * フィードから消えた回は、再生位置や保存済みが残るよう、前のまま残す。
+ * 前に読み込んだ音声の長さは、フィードに長さがない回だけ引き継ぐ。
+ * @param showId 前に取り込んだ番組の ID
+ * @param fresh 取り直した番組とエピソード（ID は showId で作ったもの）
+ * @param feedUrl これから使うフィードの URL（移転していれば移転先）
+ * @returns 新しく増えた回の数。番組が見つからなければ 0
+ */
+export const mergeFeed = (showId: string, fresh: { show: Show, episodes: Episode[] }, feedUrl: string) => {
+  const before = getCatalog().episodes.filter((e) => e.showId === showId)
+  const known = new Map(before.map((e) => [e.id, e]))
+  if (!findShow(showId)) return 0
+  const episodes = fresh.episodes.map((e) => {
+    const old = known.get(e.id)
+    return old && e.duration === 0 && old.duration > 0 ? { ...e, duration: old.duration } : e
+  })
+  const freshIds = new Set(episodes.map((e) => e.id))
+  const kept = before.filter((e) => !freshIds.has(e.id))
+  addShow({ ...fresh.show, id: showId, feedUrl }, [...episodes, ...kept])
+  return episodes.filter((e) => !known.has(e.id)).length
+}
+
+/**
  * エピソードの再生時間を、読み込んだ音声の実際の長さに直す。フィードの再生時間はないことや誤っていることがあるため。
  * @param episodeId エピソード ID
  * @param duration 実際の長さ（秒）

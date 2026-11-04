@@ -99,6 +99,25 @@ describe('parseFeed', () => {
   })
 })
 
+describe('parseFeed（取り直し）', () => {
+  const MOVED = 'https://feeds.example.test/moved.xml'
+
+  it('ID の元の URL を渡すと、その URL から番組とエピソードの ID を作る', () => {
+    const { show, episodes } = parseFeed(feed(ITEM), MOVED, FEED_URL)
+    expect(show.id).toBe(`f${hashId(FEED_URL)}`)
+    expect(show.feedUrl).toBe(MOVED)
+    expect(episodes[0].id.startsWith(`${show.id}-`)).toBe(true)
+  })
+
+  it('移転先が http・https の URL で、いまの URL と違うときだけ newFeedUrl にする', () => {
+    const moved = (url: string) => parseFeed(feed(`<itunes:new-feed-url>${url}</itunes:new-feed-url>${ITEM}`), FEED_URL)
+    expect(moved(` ${MOVED} `).newFeedUrl).toBe(MOVED)
+    expect(moved(FEED_URL).newFeedUrl).toBeUndefined()
+    expect(moved('javascript:alert(1)').newFeedUrl).toBeUndefined()
+    expect(parseFeed(feed(ITEM), FEED_URL).newFeedUrl).toBeUndefined()
+  })
+})
+
 describe('parseDuration', () => {
   it.each([
     ['1:02:03', 3723], ['62:03', 3723], ['3723', 3723], ['90.5', 90], ['', 0], ['abc', 0], ['1:2:3:4', 0],
