@@ -1,6 +1,7 @@
 # RSS で追加した番組のフィードを取り直す。フィードは scripts/e2e.sh が起動するローカルサーバー（ポート 8090）が配る
 # /growing.xml は追加したときに3本、取り直したときに4本を返す。
-# 番組詳細の「⋯」の「フィードを更新」で新しい回が増えること、ライブラリの登録済みにも最新の回が出ることを確かめる
+# 番組詳細の「⋯」の「フィードを更新」で新しい回が増え、更新の時刻が出ること、
+# ライブラリの登録済みにも最新の回が出ることを確かめる
 appId: host.exp.Exponent
 ---
 - runFlow: ../subflows/launch.yaml
@@ -19,6 +20,9 @@ appId: host.exp.Exponent
     visible: "エピソード（4本）"
     timeout: 15000
 - assertVisible: ".*第4回 取り直しで増えた回.*"
+# 番組についての欄に、フィードを最後に取った時刻が出る
+- scrollUntilVisible:
+    element: "フィードの更新: .*"
 # ライブラリの登録済みでも、取り直した最新の回が出る
 - tapOn: "ライブラリ"
 - extendedWaitUntil:

@@ -4,6 +4,7 @@ import { renderRouter, screen } from 'expo-router/testing-library'
 import { addShow, episodesOfShow, findShow, setEpisodeDuration } from '@/data/catalog'
 import { library } from '@/data/mock'
 import { parseFeed } from '@/feed/parseFeed'
+import { formatDateTime } from '@/format'
 import { AUTO_REFRESH_INTERVAL_MS, markFetched, refreshShow, refreshShows } from '@/feed/refreshFeeds'
 import { saveValue } from '@/storage/storage'
 
@@ -143,17 +144,21 @@ describe('フィードの取り直し（画面）', () => {
     expect(episodesOfShow(id)).toHaveLength(3)
   })
 
-  it('番組詳細の「⋯」から取り直し、失敗したら前の内容と理由を出す', async () => {
+  it('番組詳細の「⋯」から取り直し、失敗したら前の内容と理由と前回の更新日時を出す', async () => {
     const id = addInitial()
-    markFetched(id)
+    markFetched(id, new Date(2026, 10, 1, 9, 5))
     await renderRouter(APP_DIR, { initialUrl: `/library/show/${id}` })
     expect(screen.getByText('エピソード（2本）')).toBeOnTheScreen()
+    expect(screen.getByText('フィードの更新: 11月1日 9:05')).toBeOnTheScreen()
 
     fetchMock.mockResolvedValue(respond(feed([item(1), item(2), item(3)])))
     await fireEvent.press(screen.getByLabelText('番組のその他の操作'))
     await fireEvent.press(screen.getByText('フィードを更新'))
     await settle()
     expect(screen.getByText('エピソード（3本）')).toBeOnTheScreen()
+    // 取り直せたら、更新の時刻をいまに変える
+    const updated = formatDateTime(new Date().toISOString())
+    expect(screen.getByText(`フィードの更新: ${updated}`)).toBeOnTheScreen()
 
     fetchMock.mockRejectedValue(new Error('offline'))
     await fireEvent.press(screen.getByLabelText('番組のその他の操作'))
@@ -161,6 +166,9 @@ describe('フィードの取り直し（画面）', () => {
     await settle()
     expect(screen.getByText(/フィードを更新できませんでした。前に読み込んだ内容を表示しています。/)).toBeOnTheScreen()
     expect(screen.getByText(/通信状態を確かめてください/)).toBeOnTheScreen()
+    // 失敗したときは、最後に取れた時刻を出す
+    expect(screen.getByText(new RegExp(`前回の更新: ${updated}`))).toBeOnTheScreen()
+    expect(screen.getByText(`フィードの更新: ${updated}`)).toBeOnTheScreen()
     expect(screen.getByText('エピソード（3本）')).toBeOnTheScreen()
   })
 

@@ -21,6 +21,8 @@ const FETCHED_AT_KEY = 'feedFetchedAt'
 export type RefreshStatus = { state: 'loading' } | { state: 'failed', message: string }
 
 let statuses: Record<string, RefreshStatus> = {}
+/** 最後に取ってきた時刻。最初に使うときに保存から読む */
+let fetchedAt: Record<string, string> | undefined
 const running = new Map<string, Promise<boolean>>()
 const listeners = new Set<() => void>()
 
@@ -41,8 +43,18 @@ const setStatus = (showId: string, status: RefreshStatus | undefined) => {
  * @param at 時刻
  */
 export const markFetched = (showId: string, at = new Date()) => {
-  const all = loadValue<Record<string, string>>(FETCHED_AT_KEY) ?? {}
-  saveValue(FETCHED_AT_KEY, { ...all, [showId]: at.toISOString() })
+  fetchedAt = { ...allFetchedAt(), [showId]: at.toISOString() }
+  saveValue(FETCHED_AT_KEY, fetchedAt)
+  listeners.forEach((l) => l())
+}
+
+/**
+ * 番組ごとの、最後に取ってきた時刻を返す。
+ * @returns 番組 ID ごとの ISO 8601 の時刻
+ */
+const allFetchedAt = () => {
+  fetchedAt ??= loadValue<Record<string, string>>(FETCHED_AT_KEY) ?? {}
+  return fetchedAt
 }
 
 /**
@@ -52,7 +64,7 @@ export const markFetched = (showId: string, at = new Date()) => {
  * @returns 取り直すなら true
  */
 const isDue = (showId: string, now: number) => {
-  const at = loadValue<Record<string, string>>(FETCHED_AT_KEY)?.[showId]
+  const at = allFetchedAt()[showId]
   return !at || now - Date.parse(at) >= AUTO_REFRESH_INTERVAL_MS
 }
 
@@ -135,6 +147,7 @@ export const refreshShows = async (showIds: string[], options: { force?: boolean
 
 onStorageCleared(() => {
   statuses = {}
+  fetchedAt = undefined
   listeners.forEach((l) => l())
 })
 
@@ -156,6 +169,13 @@ const subscribe = (listener: () => void) => {
  * @returns 状態。取り直していない・成功したなら undefined
  */
 export const useRefreshStatus = (showId: string) => useSyncExternalStore(subscribe, () => statuses[showId])
+
+/**
+ * 番組を最後に取ってきた時刻を取り出し、取り直したら描き直す。
+ * @param showId 番組 ID
+ * @returns ISO 8601 の時刻。一度も取っていなければ undefined
+ */
+export const useFetchedAt = (showId: string) => useSyncExternalStore(subscribe, () => allFetchedAt()[showId])
 
 /**
  * 下に引っ張って更新するときの状態。更新が終わるまで refreshing を true にする。

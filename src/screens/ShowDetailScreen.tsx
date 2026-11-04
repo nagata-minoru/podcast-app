@@ -11,7 +11,8 @@ import { ShowEpisodeRow } from '@/components/ShowEpisodeRow'
 import { EpisodeMenuItems, ShowMoreItems, ShowRateChoices } from '@/components/ShowSheets'
 import { playStateOf } from '@/data/derive'
 import { episodesOfShow, findShow, useCatalog } from '@/data/catalog'
-import { refreshShow, usePullRefresh, useRefreshStatus } from '@/feed/refreshFeeds'
+import { refreshShow, useFetchedAt, usePullRefresh, useRefreshStatus } from '@/feed/refreshFeeds'
+import { formatDateTime } from '@/format'
 import { useLibrary } from '@/library/LibraryProvider'
 import { useShowActions } from '@/library/useShowActions'
 import { usePlayer } from '@/player/PlayerProvider'
@@ -109,6 +110,7 @@ const Header = ({ show, hidden, onUnfollow }: { show: Show, hidden: boolean, onU
 const RefreshNote = ({ showId }: { showId: string }) => {
   const c = usePalette()
   const status = useRefreshStatus(showId)
+  const fetchedAt = useFetchedAt(showId)
   if (!status) return null
   if (status.state === 'loading') {
     return <Text accessibilityLiveRegion="polite" style={{ color: c.subText }}>フィードを更新しています…</Text>
@@ -116,8 +118,21 @@ const RefreshNote = ({ showId }: { showId: string }) => {
   return (
     <Text accessibilityRole="alert" style={[styles.hidden, { color: c.text, borderColor: c.border }]}>
       {`⚠ フィードを更新できませんでした。前に読み込んだ内容を表示しています。${status.message}`}
+      {fetchedAt && `\n前回の更新: ${formatDateTime(fetchedAt)}`}
     </Text>
   )
+}
+
+/**
+ * フィードを最後に取ってきた時刻の行。RSS で追加した番組で、時刻を残しているときだけ出る。
+ * @param props.showId 番組 ID
+ * @returns 時刻の行。なければ null
+ */
+const FetchedAt = ({ showId }: { showId: string }) => {
+  const c = usePalette()
+  const fetchedAt = useFetchedAt(showId)
+  if (!fetchedAt) return null
+  return <Text style={{ color: c.subText }}>{`フィードの更新: ${formatDateTime(fetchedAt)}`}</Text>
 }
 
 /**
@@ -239,6 +254,7 @@ const ShowDetailScreen = () => {
         <SectionTitle title="この番組について" />
         <Text style={{ color: c.subText }}>{`配信者: ${show.publisher}`}</Text>
         {show.updateFrequency && <Text style={{ color: c.subText }}>{`更新: ${show.updateFrequency}`}</Text>}
+        {show.feedUrl && <FetchedAt showId={show.id} />}
         {/* 通知を重ねても最後の行が隠れないよう、下に余白を取る */}
         <View style={{ height: 72 }} />
       </Screen>

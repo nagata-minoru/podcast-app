@@ -1,4 +1,4 @@
-import { formatClock, formatDate, formatDuration, formatSpokenClock } from '@/format'
+import { formatClock, formatDate, formatDateTime, formatDuration, formatSpokenClock } from '@/format'
 
 describe('formatDuration', () => {
   it('60分未満は分だけで表す', () => {
@@ -29,6 +29,13 @@ describe('formatDate', () => {
 
   it('時刻とタイムゾーンは無視し、先頭の日付を使う', () => {
     expect(formatDate('2026-01-05T23:55:00+09:00')).toBe('1月5日')
+  })
+})
+
+describe('formatDateTime', () => {
+  it('端末の時間帯の月日と時分にし、分は2桁にする', () => {
+    expect(formatDateTime(new Date(2026, 10, 4, 18, 6).toISOString())).toBe('11月4日 18:06')
+    expect(formatDateTime(new Date(2026, 0, 9, 0, 30).toISOString())).toBe('1月9日 0:30')
   })
 })
 
