@@ -29,10 +29,10 @@ export const episodes: Episode[] = [{
   publishedAt: '2026-10-26', duration: 67,
 }, {
   id: 'e3', showId: 's2', title: '第18回 卵はなぜ固まるのか', summary: 'たんぱく質の変性を目玉焼きで。',
-  publishedAt: '2026-10-28', duration: 112,
+  publishedAt: '2026-10-28', duration: 102,
 }, {
   id: 'e4', showId: 's2', title: '第17回 だしのうま味の正体', summary: 'グルタミン酸とイノシン酸の相乗効果。',
-  publishedAt: '2026-10-21', duration: 67,
+  publishedAt: '2026-10-21', duration: 62,
 }, {
   id: 'e5', showId: 's3', title: '第9回 はじめての決算', summary: '数字が合わない夜の話。',
   publishedAt: '2026-10-24', duration: 87,

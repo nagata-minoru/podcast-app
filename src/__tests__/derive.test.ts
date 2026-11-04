@@ -39,7 +39,7 @@ describe('再生位置の記録からの集計', () => {
     const e3 = episodes.find((e) => e.id === 'e3')!
     expect(playStatusText(e3, undefined)).toBe('○ 未再生')
     expect(playStatusText(e3, { ...p('e3'), position: 40 })).toBe('残り1分')
-    expect(playStatusText(e3, { ...p('e3'), position: 100 })).toBe('残り12秒')
+    expect(playStatusText(e3, { ...p('e3'), position: 90 })).toBe('残り12秒')
     expect(playStatusText(e3, p('e3', true))).toBe('✓ 再生済み')
   })
 })
