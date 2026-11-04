@@ -40,10 +40,9 @@ appId: host.exp.Exponent
 - assertVisible: "続きから再生"
 - tapOn: "検索"
 - assertVisible: "ことこと研究会"
-# ヘッダーの戻るボタンは前の画面名（下部タブと同じ名前）になるため、番組名より上を押す
+# ヘッダーの戻るボタンを ID（BackButton）で押す
 - tapOn:
-    text: "検索"
-    above: "ことこと研究会"
+    id: "BackButton"
 - assertVisible: "人気のテーマ"
 - assertVisible:
     id: "mini-player"

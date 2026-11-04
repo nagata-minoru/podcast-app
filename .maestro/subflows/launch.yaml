@@ -3,10 +3,11 @@
 # Expo Go は、止めた状態から開くと URL のパスを使わず、開いているときに入口の URL を受けるとアプリを読み込み直す。
 # そのため、一度開いてから入口を開き、読み込み直したあとに出るボタンを押す
 # 開発サーバー（yarn expo start）がポート 8081 で動いている必要がある
+# Expo Go の開発メニューの歯車ボタンは右上のボタンを隠すため、URL に __expo_disable_fab=1 を付けて出さない
 appId: host.exp.Exponent
 ---
 - stopApp
-- openLink: exp://127.0.0.1:8081
+- openLink: "exp://127.0.0.1:8081?__expo_disable_fab=1"
 # Expo Go をその端末で初めて使うときだけ出る、開発メニューの案内を閉じる
 - tapOn:
     text: "Continue"
@@ -14,7 +15,7 @@ appId: host.exp.Exponent
 - extendedWaitUntil:
     visible: "続きから再生"
     timeout: 60000
-- openLink: exp://127.0.0.1:8081/--/dev-reset
+- openLink: "exp://127.0.0.1:8081/--/dev-reset?__expo_disable_fab=1"
 - tapOn: "保存を消してホームを開く"
 - extendedWaitUntil:
     visible: "続きから再生"
