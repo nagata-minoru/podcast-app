@@ -3,6 +3,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native'
 
 import { type Choice, ChoiceGroup } from '@/components/ChoiceGroup'
 import { Screen, SectionTitle } from '@/components/parts'
+import { AUDIO_CREDITS } from '@/data/audio'
 import { formatRate, RATES } from '@/player/playerState'
 import { type ThemeChoice, useSettings } from '@/settings/SettingsProvider'
 import { MIN_TAP, usePalette } from '@/theme'
@@ -47,7 +48,7 @@ const Label = ({ title }: { title: string }) => {
 }
 
 /**
- * 設定。アカウント／再生／アプリ／コンテンツ管理の4区分。OS側で決める設定は扱わない。
+ * 設定。アカウント／再生／アプリ／コンテンツ管理の4区分と、同梱の音声のクレジット。OS側で決める設定は扱わない。
  * いま使えるのは再生速度とテーマだけで、値はアプリを終了すると元に戻る。
  * @returns 設定画面
  */
@@ -79,6 +80,9 @@ const Settings = () => {
           <Text style={{ color: c.subText }}>›</Text>
         </Pressable>
       </Link>
+      <SectionTitle title="音声のクレジット" />
+      <Text style={{ color: c.subText }}>架空の番組の音声は、VOICEVOX で作りました。</Text>
+      {AUDIO_CREDITS.map((credit) => <Text key={credit} style={{ color: c.text }}>{credit}</Text>)}
     </Screen>
   )
 }

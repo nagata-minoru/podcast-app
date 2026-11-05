@@ -11,8 +11,8 @@ describe('主要画面', () => {
 
   it('ホームの続きから再生は、残り時間を出し、再生ボタンですぐ再生と一時停止ができる', async () => {
     await renderRouter(APP_DIR, { initialUrl: '/home' })
-    // e3 は 112秒のうち 40秒まで聴いた回
-    expect(screen.getByText('残り1分')).toBeOnTheScreen()
+    // e3 は 92秒のうち 40秒まで聴いた回
+    expect(screen.getByText('残り52秒')).toBeOnTheScreen()
     await fireEvent.press(screen.getByLabelText('第18回 卵はなぜ固まるのかを再生'))
     expect(screen.getByTestId('mini-player')).toBeOnTheScreen()
     await fireEvent.press(screen.getByLabelText('第18回 卵はなぜ固まるのかを一時停止'))
@@ -88,5 +88,13 @@ describe('設定', () => {
   it('未設計の項目は準備中として押せない', async () => {
     await renderRouter(APP_DIR, { initialUrl: '/settings' })
     expect(screen.getByLabelText('自動ダウンロード、準備中')).toBeDisabled()
+  })
+
+  it('同梱の音声に使った VOICEVOX の話者のクレジットを出す', async () => {
+    await renderRouter(APP_DIR, { initialUrl: '/settings' })
+    expect(screen.getByText('音声のクレジット')).toBeOnTheScreen()
+    for (const name of ['冥鳴ひまり', '麒ヶ島宗麟', '剣崎雌雄', '雨晴はう', '玄野武宏']) {
+      expect(screen.getByText(`VOICEVOX:${name}`)).toBeOnTheScreen()
+    }
   })
 })

@@ -3,21 +3,20 @@
 appId: host.exp.Exponent
 ---
 - runFlow: ../subflows/launch.yaml
-# 第18回は 112秒のうち 40秒まで聴いた回。記録の位置から鳴り始める
+# 第18回は 92秒のうち 40秒まで聴いた回。記録の位置から鳴り始める
 - tapOn: "第18回 卵はなぜ固まるのかを再生"
 - tapOn: "第18回 卵はなぜ固まるのか"
 - assertVisible: "30秒進む"
 - extendedWaitUntil:
     visible: "0:4[3-9]"
     timeout: 15000
-# 30秒進むを2回押すと 1:40 を過ぎ、残りは10秒あまりになる
+# 30秒進むを押すと 1:10 を過ぎ、残りは20秒あまりになる
 - tapOn: "30秒進む"
-- tapOn: "30秒進む"
-- assertVisible: "1:[4-5][0-9]"
+- assertVisible: "1:[1-2][0-9]"
 - tapOn: "再生画面を閉じる"
 # 音声が最後まで鳴ると、再生済みになってミニプレイヤーが消える
 - extendedWaitUntil:
     notVisible:
       id: "mini-player"
-    timeout: 30000
+    timeout: 45000
 - assertVisible: "ホーム"
