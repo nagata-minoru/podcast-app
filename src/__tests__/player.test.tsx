@@ -81,7 +81,7 @@ describe('再生まわり', () => {
   it('最後まで再生すると、再生済みにしてミニプレイヤーを消す', async () => {
     await renderRouter(APP_DIR, { initialUrl: '/home' })
     await fireEvent.press(screen.getByLabelText('第18回 卵はなぜ固まるのかを再生'))
-    // 102秒のうち40秒からなので、62秒で最後まで届く
+    // 92秒のうち40秒からなので、52秒で最後まで届く
     await act(async () => {
       jest.advanceTimersByTime(73000)
     })

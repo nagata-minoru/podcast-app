@@ -4,7 +4,7 @@ import { findShow } from '@/data/catalog'
 import type { Episode } from '@/types'
 
 /**
- * エピソードごとの音声。どれも scripts/make-audio.sh で、架空の原稿を macOS の読み上げで作ったもの。
+ * エピソードごとの音声。どれも scripts/make-audio.mjs で、架空の原稿を VOICEVOX で読み上げて作ったもの。
  * mock.ts の再生時間（秒）は、この音声の長さ（秒未満を切り捨て）に合わせている。
  */
 export const episodeAudio: Record<string, AudioSource> = {
@@ -15,6 +15,14 @@ export const episodeAudio: Record<string, AudioSource> = {
   e5: require('../../assets/audio/e5.m4a'),
   e6: require('../../assets/audio/e6.m4a'),
 }
+
+/**
+ * 同梱の音声に使った VOICEVOX の話者のクレジット。各話者の規約により、音声を使うときに表記する。
+ * 話者を変えたら、scripts/make-audio.mjs の SPEAKERS と合わせて直す。
+ */
+export const AUDIO_CREDITS = [
+  'VOICEVOX:冥鳴ひまり', 'VOICEVOX:麒ヶ島宗麟', 'VOICEVOX:剣崎雌雄', 'VOICEVOX:雨晴はう', 'VOICEVOX:玄野武宏',
+]
 
 /**
  * エピソードの音声を返す。同梱の音声があればそれを、なければフィードの音声の URL を使う。
