@@ -27,10 +27,9 @@ appId: host.exp.Exponent
 - tapOn: "非表示にする"
 - assertVisible: "番組を非表示にしました。.*"
 - assertVisible: ".*非表示にしている番組です.*"
-# 設定の「非表示にした番組」から再表示する。ヘッダーの戻るボタンは下部タブと同じ名前のため、番組名より上を押す
+# 設定の「非表示にした番組」から再表示する。ヘッダーの戻るボタンは ID（BackButton）で押す
 - tapOn:
-    text: "新着・おすすめ"
-    above: "ことこと研究会"
+    id: "BackButton"
 - tapOn: "ホーム"
 - tapOn: "プロフィールと設定"
 - scrollUntilVisible:

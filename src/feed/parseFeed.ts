@@ -21,7 +21,8 @@ export class FeedError extends Error {
 }
 
 /** フィードから取り込んだ番組とエピソード */
-export type ParsedFeed = { show: Show, episodes: Episode[] }
+/** フィードを読んだ結果。newFeedUrl は、フィードが知らせている移転先（itunes:new-feed-url）の http・https の URL */
+export type ParsedFeed = { show: Show, episodes: Episode[], newFeedUrl?: string }
 
 /** XML を読んだ結果の値。文字列、属性付きの要素、同じ名前の要素の並びのどれか */
 type Node = string | number | boolean | { [key: string]: Node } | Node[] | undefined
@@ -191,11 +192,12 @@ const toEpisode = (item: Element, showId: string): Episode | undefined => {
 /**
  * RSS フィードを読み、番組とエピソードにする。
  * @param xml フィードの中身
- * @param feedUrl フィードの URL（番組 ID を作るのに使う）
- * @returns 番組とエピソード
+ * @param feedUrl フィードの URL
+ * @param idSource 番組 ID を作る元の URL。取り直しでは、最初に追加した URL を渡して ID を変えない
+ * @returns 番組とエピソード。移転先が書かれていれば newFeedUrl も
  * @throws FeedError（notFeed）RSS のフィードとして読めないとき
  */
-export const parseFeed = (xml: string, feedUrl: string): ParsedFeed => {
+export const parseFeed = (xml: string, feedUrl: string, idSource = feedUrl): ParsedFeed => {
   let doc: Node
   try {
     // 閉じていないタグなども誤りにするため、読む前に検証する
@@ -207,7 +209,7 @@ export const parseFeed = (xml: string, feedUrl: string): ParsedFeed => {
   if (!channel) throw new FeedError('notFeed', 'RSS の channel がありません')
   const title = plainText(text(channel.title))
   if (!title) throw new FeedError('notFeed', '番組名がありません')
-  const showId = `f${hashId(feedUrl)}`
+  const showId = `f${hashId(idSource)}`
   const items = Array.isArray(channel.item) ? channel.item : []
   const seen = new Set<string>()
   const episodes = items.flatMap((node) => {
@@ -225,5 +227,7 @@ export const parseFeed = (xml: string, feedUrl: string): ParsedFeed => {
     category: attr(channel['itunes:category'], 'text'),
     feedUrl,
   }
-  return { show, episodes }
+  const moved = text(channel['itunes:new-feed-url'])
+  const newFeedUrl = /^https?:\/\/[^\s/?#]+\S*$/i.test(moved) && moved !== feedUrl ? moved : undefined
+  return { show, episodes, newFeedUrl }
 }

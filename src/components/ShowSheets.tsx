@@ -21,16 +21,20 @@ const FOLLOW_SETTINGS = 0
  * @param props.onHide 非表示の確認を開く処理
  * @param props.onUnhide 再表示する処理
  * @param props.onUnfollow フォローを解除する処理
+ * @param props.onRefresh フィードを取り直す処理。RSS で追加した番組だけ「フィードを更新」を出す
  * @returns その他メニューの項目
  */
-export const ShowMoreItems = ({ show, followed, hidden, onRate, onHide, onUnhide, onUnfollow }: {
+export const ShowMoreItems = ({
+  show, followed, hidden, onRate, onHide, onUnhide, onUnfollow, onRefresh,
+}: {
   show: Show, followed: boolean, hidden: boolean,
-  onRate: () => void, onHide: () => void, onUnhide: () => void, onUnfollow: () => void,
+  onRate: () => void, onHide: () => void, onUnhide: () => void, onUnfollow: () => void, onRefresh?: () => void,
 }) => {
   const rate = useLibrary().showRates[show.id]
   const rateNote = rate === undefined ? '設定に合わせる' : formatRate(rate)
   return (
     <>
+      {show.feedUrl && onRefresh && <SheetItem label="フィードを更新" onPress={onRefresh} />}
       <SheetItem label="自動ダウンロードを設定" note="準備中" />
       <SheetItem label={`再生速度をこの番組だけ変更（${rateNote}）`} onPress={onRate} />
       {followed && <SheetItem label="通知を設定" note="準備中" />}

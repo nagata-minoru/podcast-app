@@ -1,6 +1,6 @@
 import { Link } from 'expo-router'
 import type { ReactNode } from 'react'
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native'
+import { Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native'
 
 import { lacksAudio } from '@/data/audio'
 import { findShow } from '@/data/catalog'
@@ -11,17 +11,24 @@ import { MIN_TAP, usePalette } from '@/theme'
 import type { Episode, Show, TabName } from '@/types'
 
 /**
- * 画面の土台。背景色を付けたスクロール領域。
+ * 画面の土台。背景色を付けたスクロール領域。onRefresh を渡すと、下に引っ張って更新できる。
  * @param props.children 画面の中身
+ * @param props.refreshing 更新しているか
+ * @param props.onRefresh 下に引っ張ったときに呼ぶ関数
  * @returns スクロールできる画面
  */
-export const Screen = ({ children }: { children: ReactNode }) => {
+export const Screen = ({ children, refreshing = false, onRefresh }: {
+  children: ReactNode, refreshing?: boolean, onRefresh?: () => void,
+}) => {
   const c = usePalette()
+  const refreshControl = onRefresh && (
+    <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={c.subText} />
+  )
   return (
     // キーボードを出したままでも、1回のタップでボタンが反応するようにする（検索結果のフォローなど）
     <ScrollView
       keyboardShouldPersistTaps="handled" style={{ backgroundColor: c.background }}
-      contentContainerStyle={styles.screen}>
+      contentContainerStyle={styles.screen} refreshControl={refreshControl}>
       {children}
     </ScrollView>
   )

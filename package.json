@@ -3,17 +3,17 @@
   "version": "1.0.0",
   "main": "expo-router/entry",
   "dependencies": {
-    "expo": "~58.0.22",
+    "expo": "~58.0.23",
     "expo-audio": "~58.0.11",
-    "expo-constants": "~58.0.14",
-    "expo-linking": "~58.0.15",
-    "expo-router": "~58.0.29",
+    "expo-constants": "~58.0.15",
+    "expo-linking": "~58.0.16",
+    "expo-router": "~58.0.30",
     "expo-sqlite": "~58.0.15",
     "expo-status-bar": "~58.0.4",
     "fast-xml-parser": "5.11.2",
     "react": "19.3.0",
     "react-native": "0.88.1",
-    "react-native-safe-area-context": "~5.10.1",
+    "react-native-safe-area-context": "~5.11.1",
     "react-native-screens": "~4.30.1"
   },
   "devDependencies": {
@@ -24,7 +24,7 @@
     "eslint": "^9.0.0",
     "eslint-config-expo": "~58.0.4",
     "jest": "~30.5.2",
-    "jest-expo": "~58.0.13",
+    "jest-expo": "~58.0.14",
     "typescript": "~6.0.3"
   },
   "scripts": {
@@ -45,6 +45,11 @@
   "packageManager": "yarn@4.18.1",
   "jest": {
     "preset": "jest-expo",
+    "roots": [
+      "<rootDir>/src",
+      "<rootDir>/__mocks__",
+      "<rootDir>/jest"
+    ],
     "moduleNameMapper": {
       "^@/(.*)$": "<rootDir>/src/$1"
     },

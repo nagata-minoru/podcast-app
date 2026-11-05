@@ -11,6 +11,8 @@ import { ShowEpisodeRow } from '@/components/ShowEpisodeRow'
 import { EpisodeMenuItems, ShowMoreItems, ShowRateChoices } from '@/components/ShowSheets'
 import { playStateOf } from '@/data/derive'
 import { episodesOfShow, findShow, useCatalog } from '@/data/catalog'
+import { refreshShow, useFetchedAt, usePullRefresh, useRefreshStatus } from '@/feed/refreshFeeds'
+import { formatDateTime } from '@/format'
 import { useLibrary } from '@/library/LibraryProvider'
 import { useShowActions } from '@/library/useShowActions'
 import { usePlayer } from '@/player/PlayerProvider'
@@ -101,6 +103,39 @@ const Header = ({ show, hidden, onUnfollow }: { show: Show, hidden: boolean, onU
 }
 
 /**
+ * フィードを取り直している・取り直せなかったことの知らせ。RSS で追加した番組だけ出る。
+ * @param props.showId 番組 ID
+ * @returns 知らせ。何もなければ null
+ */
+const RefreshNote = ({ showId }: { showId: string }) => {
+  const c = usePalette()
+  const status = useRefreshStatus(showId)
+  const fetchedAt = useFetchedAt(showId)
+  if (!status) return null
+  if (status.state === 'loading') {
+    return <Text accessibilityLiveRegion="polite" style={{ color: c.subText }}>フィードを更新しています…</Text>
+  }
+  return (
+    <Text accessibilityRole="alert" style={[styles.hidden, { color: c.text, borderColor: c.border }]}>
+      {`⚠ フィードを更新できませんでした。前に読み込んだ内容を表示しています。${status.message}`}
+      {fetchedAt && `\n前回の更新: ${formatDateTime(fetchedAt)}`}
+    </Text>
+  )
+}
+
+/**
+ * フィードを最後に取ってきた時刻の行。RSS で追加した番組で、時刻を残しているときだけ出る。
+ * @param props.showId 番組 ID
+ * @returns 時刻の行。なければ null
+ */
+const FetchedAt = ({ showId }: { showId: string }) => {
+  const c = usePalette()
+  const fetchedAt = useFetchedAt(showId)
+  if (!fetchedAt) return null
+  return <Text style={{ color: c.subText }}>{`フィードの更新: ${formatDateTime(fetchedAt)}`}</Text>
+}
+
+/**
  * エピソードの欄。再生途中の欄の下に、絞り込みと番組内検索を通した新しい順の一覧を置く。
  * @param props.show 番組
  * @param props.onMenu エピソードのメニューを開く処理
@@ -141,6 +176,7 @@ const Episodes = ({ show, onMenu }: { show: Show, onMenu: (episode: Episode) => 
 
 /**
  * 番組詳細（補助画面）。各タブの show/[id] から共通で使い、開いたタブの画面履歴に積む。仕様は docs/show-detail.md。
+ * RSS で追加した番組は、下に引っ張るか「⋯」の「フィードを更新」でフィードを取り直す。
  * @returns 番組詳細画面
  */
 const ShowDetailScreen = () => {
@@ -151,6 +187,7 @@ const ShowDetailScreen = () => {
   const actions = useShowActions(show)
   const [sheet, setSheet] = useState<SheetState>(null)
   const close = () => setSheet(null)
+  const pull = usePullRefresh(() => refreshShow(id, { force: true }))
   if (!show) {
     return (
       <Screen>
@@ -187,6 +224,10 @@ const ShowDetailScreen = () => {
         onUnfollow={() => {
           close()
           actions.unfollow()
+        }}
+        onRefresh={() => {
+          close()
+          refreshShow(show.id, { force: true })
         }} />
     )
     return { title: show.title, body: items }
@@ -205,13 +246,15 @@ const ShowDetailScreen = () => {
             </Pressable>
           ),
         }} />
-      <Screen>
+      <Screen {...(show.feedUrl ? pull : {})}>
         <Header show={show} hidden={actions.hidden} onUnfollow={actions.unfollow} />
+        <RefreshNote showId={show.id} />
         <Overview show={show} />
         <Episodes show={show} onMenu={(episode) => setSheet({ kind: 'episode', episode })} />
         <SectionTitle title="この番組について" />
         <Text style={{ color: c.subText }}>{`配信者: ${show.publisher}`}</Text>
         {show.updateFrequency && <Text style={{ color: c.subText }}>{`更新: ${show.updateFrequency}`}</Text>}
+        {show.feedUrl && <FetchedAt showId={show.id} />}
         {/* 通知を重ねても最後の行が隠れないよう、下に余白を取る */}
         <View style={{ height: 72 }} />
       </Screen>

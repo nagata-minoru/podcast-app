@@ -5,6 +5,7 @@ import { Pressable, StyleSheet, Text, TextInput } from 'react-native'
 import { Screen } from '@/components/parts'
 import { addShow } from '@/data/catalog'
 import { feedErrorMessage, fetchFeed } from '@/feed/fetchFeed'
+import { markFetched } from '@/feed/refreshFeeds'
 import { useLibrary } from '@/library/LibraryProvider'
 import { MIN_TAP, usePalette } from '@/theme'
 
@@ -39,6 +40,7 @@ const AddFeed = () => {
       const { show, episodes } = await fetchFeed(url)
       if (!active.current) return
       addShow(show, episodes)
+      markFetched(show.id)
       follow(show.id)
       router.replace(`/search/show/${show.id}`)
     } catch (e) {

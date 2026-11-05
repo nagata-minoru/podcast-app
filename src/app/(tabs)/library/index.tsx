@@ -1,13 +1,16 @@
 import { Stack } from 'expo-router'
 import { useState } from 'react'
+import { Text } from 'react-native'
 
 import { Empty, EpisodeRow, Screen, ShowRow } from '@/components/parts'
 import { Segmented } from '@/components/Segmented'
 import { unplayedCount, withEpisodes } from '@/data/derive'
 import { episodesOfShow, findShow, useCatalog } from '@/data/catalog'
+import { feedShowIds, refreshShows, usePullRefresh } from '@/feed/refreshFeeds'
 import { formatClock, formatDuration } from '@/format'
 import { useLibrary } from '@/library/LibraryProvider'
 import { usePlayer } from '@/player/PlayerProvider'
+import { usePalette } from '@/theme'
 import type { Show } from '@/types'
 
 const VIEWS = ['登録済み', '保存済み', '履歴'] as const
@@ -65,14 +68,26 @@ const History = () => {
 
 /**
  * ライブラリ。登録済み・保存済み・履歴を切り替えて表示する。
+ * 登録済みでは、下に引っ張ると RSS で追加したフォロー中の番組のフィードを取り直す。
  * @returns ライブラリ画面
  */
 const LibraryScreen = () => {
+  const c = usePalette()
   const [view, setView] = useState<(typeof VIEWS)[number]>('登録済み')
+  const [failed, setFailed] = useState(0)
+  const { followedShowIds, hiddenShowIds } = useLibrary()
+  const pull = usePullRefresh(async () => {
+    setFailed(await refreshShows(feedShowIds(followedShowIds, hiddenShowIds), { force: true }))
+  })
   return (
-    <Screen>
+    <Screen {...(view === '登録済み' ? pull : {})}>
       <Stack.Screen options={{ title: 'ライブラリ' }} />
       <Segmented items={VIEWS} value={view} onChange={setView} />
+      {view === '登録済み' && failed > 0 && (
+        <Text accessibilityRole="alert" style={{ color: c.text }}>
+          {`⚠ ${failed}件の番組を更新できませんでした。番組詳細で理由を確かめられます。`}
+        </Text>
+      )}
       {view === '登録済み' && <Followed />}
       {view === '保存済み' && <Saved />}
       {view === '履歴' && <History />}

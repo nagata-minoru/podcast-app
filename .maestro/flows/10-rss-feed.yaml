@@ -14,8 +14,7 @@ appId: host.exp.Exponent
     timeout: 15000
 # 誤った URL のまま戻ると検索に戻る。開き直すと入力欄は空になる
 - tapOn:
-    text: "検索"
-    above: "RSS の URL で追加"
+    id: "BackButton"
 - assertVisible: "人気のテーマ"
 - tapOn: "＋ RSS の URL で追加"
 - tapOn: "RSS フィードの URL"
@@ -41,11 +40,10 @@ appId: host.exp.Exponent
     visible: ".*第2回 長さが書いていない回.*10月2[67]日・1分.*"
     timeout: 15000
 - tapOn: "第2回 長さが書いていない回を一時停止"
-# 番組詳細から戻ると、追加画面ではなく検索に戻る。戻るボタンは前の画面名（下部タブと同じ名前）なので、番組名より上を押す
+# 番組詳細から戻ると、追加画面ではなく検索に戻る。戻るボタンは ID（BackButton）で押す
 - scrollUntilVisible:
     element: "試し聴きラジオ"
     direction: UP
 - tapOn:
-    text: "検索"
-    above: "試し聴きラジオ"
+    id: "BackButton"
 - assertVisible: "人気のテーマ"

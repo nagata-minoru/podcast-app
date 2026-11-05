@@ -1,7 +1,9 @@
 # Learn more https://docs.github.com/en/get-started/getting-started-with-git/ignoring-files
 
 # dependencies
-node_modules/
+# node_modules は、実体を Spotlight の対象外（.noindex）に移してリンクにしている場合もあるため、リンクも除く
+node_modules
+node_modules.noindex/
 
 # Expo
 .expo/
