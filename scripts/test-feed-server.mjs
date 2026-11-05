@@ -1,5 +1,6 @@
 // E2E テスト用に、架空の番組「試し聴きラジオ」の RSS フィードと音声を配るローカルサーバー。
 // 音声は assets/audio の読み上げ音声（架空の原稿）を使う。AVPlayer が求める Range 要求に応える。
+// /growing.xml は取り直しの確かめ用で、配るたびに3本と4本を交互に返す（架空の番組「増えるラジオ」）。
 // 使い方: node scripts/test-feed-server.mjs [ポート]（既定は 8090）。127.0.0.1 だけで待ち受ける
 import { createReadStream, statSync } from 'node:fs'
 import { createServer } from 'node:http'
@@ -12,19 +13,34 @@ const AUDIO_DIR = join(dirname(fileURLToPath(import.meta.url)), '..', 'assets', 
 /** 配る音声。フィードの enclosure から /audio/<名前> で参照する */
 const AUDIO_FILES = new Set(['e1.m4a', 'e2.m4a'])
 
+/** /growing.xml を配った回数。偶数回目（追加したあとの取り直し）には新しい回を足す */
+let growingCount = 0
+
+/** 取り直しで増える回（/growing.xml の偶数回目だけ） */
+const newItem = (base) => `
+    <item>
+      <title>第4回 取り直しで増えた回</title>
+      <guid isPermaLink="false">trial-4</guid>
+      <pubDate>Thu, 29 Oct 2026 03:00:00 +0000</pubDate>
+      <description>フィードを取り直すと増える回です。</description>
+      <enclosure url="${base}/audio/e1.m4a" type="audio/mp4" length="1" />
+    </item>`
+
 /**
  * 架空の番組のフィードを作る。第3回は長さを書き、第2回は長さを書かず、第1回は音声を載せない。
  * @param base サーバーの URL
+ * @param options.title 番組名
+ * @param options.grown 取り直しで増える第4回を載せるか
  * @returns フィードの XML
  */
-const feedXml = (base) => `<?xml version="1.0" encoding="UTF-8"?>
+const feedXml = (base, { title = '試し聴きラジオ', grown = false } = {}) => `<?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0" xmlns:itunes="http://www.itunes.com/dtds/podcast-1.0.dtd">
   <channel>
-    <title>試し聴きラジオ</title>
+    <title>${title}</title>
     <link>${base}/</link>
     <itunes:author>架空の放送室</itunes:author>
     <description><![CDATA[<p>動作確認のための<b>架空の番組</b>です。</p>]]></description>
-    <itunes:category text="テクノロジー" />
+    <itunes:category text="テクノロジー" />${grown ? newItem(base) : ''}
     <item>
       <title>第3回 長さが書いてある回</title>
       <guid isPermaLink="false">trial-3</guid>
@@ -80,6 +96,13 @@ const server = createServer((req, res) => {
   if (path === '/feed.xml') {
     res.writeHead(200, { 'Content-Type': 'application/rss+xml; charset=utf-8' })
     res.end(feedXml(`http://${HOST}:${PORT}`))
+    return
+  }
+  // 取り直しの確かめ用。追加したとき（奇数回目）は3本、取り直したとき（偶数回目）は4本にする
+  if (path === '/growing.xml') {
+    growingCount += 1
+    res.writeHead(200, { 'Content-Type': 'application/rss+xml; charset=utf-8' })
+    res.end(feedXml(`http://${HOST}:${PORT}`, { title: '増えるラジオ', grown: growingCount % 2 === 0 }))
     return
   }
   const name = path.startsWith('/audio/') ? path.slice('/audio/'.length) : ''

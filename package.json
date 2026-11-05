@@ -45,6 +45,11 @@
   "packageManager": "yarn@4.18.1",
   "jest": {
     "preset": "jest-expo",
+    "roots": [
+      "<rootDir>/src",
+      "<rootDir>/__mocks__",
+      "<rootDir>/jest"
+    ],
     "moduleNameMapper": {
       "^@/(.*)$": "<rootDir>/src/$1"
     },
