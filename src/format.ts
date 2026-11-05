@@ -21,6 +21,17 @@ export const formatDate = (iso: string) => {
 }
 
 /**
+ * 時刻を、端末の時間帯で「11月4日 18:06」の形にする。
+ * @param iso ISO 8601 の時刻
+ * @returns 月日と時分の文字列
+ */
+export const formatDateTime = (iso: string) => {
+  const d = new Date(iso)
+  const minutes = String(d.getMinutes()).padStart(2, '0')
+  return `${d.getMonth() + 1}月${d.getDate()}日 ${d.getHours()}:${minutes}`
+}
+
+/**
  * 秒数を再生位置の表示「12:03」「1:02:05」の形にする。小数は切り捨てる。
  * @param seconds 秒数
  * @returns 時計の形の文字列

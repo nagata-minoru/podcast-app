@@ -3,6 +3,7 @@ import { StatusBar } from 'expo-status-bar'
 import { useEffect } from 'react'
 import { AppState, useColorScheme } from 'react-native'
 
+import { useHeaderOptions } from '@/components/TabStack'
 import { feedShowIds, refreshShows } from '@/feed/refreshFeeds'
 
 import { LibraryProvider, useLibrary } from '@/library/LibraryProvider'
@@ -33,9 +34,10 @@ const useAutoRefresh = () => {
 const ThemedStack = () => {
   useAutoRefresh()
   const dark = useColorScheme() === 'dark'
+  const headerOptions = useHeaderOptions()
   return (
     <ThemeProvider value={dark ? DarkTheme : DefaultTheme}>
-      <Stack screenOptions={{ headerBackButtonDisplayMode: 'minimal' }}>
+      <Stack screenOptions={headerOptions}>
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="player" options={{ presentation: 'modal', headerShown: false }} />
         <Stack.Screen name="settings/index" options={{ title: '設定' }} />

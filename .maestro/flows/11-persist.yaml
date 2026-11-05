@@ -13,8 +13,7 @@ appId: host.exp.Exponent
     visible: "エピソード（3本）"
     timeout: 15000
 - tapOn:
-    text: "検索"
-    above: "試し聴きラジオ"
+    id: "BackButton"
 - tapOn: "番組・エピソード・テーマを検索"
 - inputText: "雑談"
 - tapOn: "夜ふかし雑談所をフォロー"
